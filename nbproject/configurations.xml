@@ -40,7 +40,7 @@
     </logicalFolder>
     <itemPath>.gitignore</itemPath>
     <itemPath>LICENSE</itemPath>
-    <itemPath>README</itemPath>
+    <itemPath>README.md</itemPath>
   </logicalFolder>
   <sourceRootList>
     <Elem>src</Elem>
@@ -89,7 +89,7 @@
       </item>
       <item path="LICENSE" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="README" ex="false" tool="3" flavor2="0">
+      <item path="README.md" ex="false" tool="3" flavor2="0">
       </item>
       <item path="includes/Exceptions.h" ex="false" tool="3" flavor2="0">
       </item>
