@@ -5,7 +5,7 @@ This program calculates the TPM values for the exons and introns. It also
 compile a set of files per samples with the raw counts, TPM for exons and 
 introns individually and for the whole transcript.    
 
-The program parses RNAseq aligned reads (BAM files) in a directory and uses 
+The program parses RNA-Seq aligned reads (BAM files) in a directory and uses 
 a GTF file to allocate the reads into the genomic features. Once all reads for
 a BAM file are allocated the program compute the TPM value for the exons, 
 introns and for the union of the exons (transcript) and the union of the 
