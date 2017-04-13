@@ -19,6 +19,7 @@ For example, let's suppose that the conditions prefix patterns are NBC for
 control samples and CLL for treated samples. 
 
 The BAM files can be named as:
+
     NBC_1072821_accepted_hits.sorted.bam
     NBC_1072822_accepted_hits.sorted.bam
     CLL_1072723_accepted_hits.sorted.bam
@@ -158,7 +159,6 @@ Roberto Vera Alvarez, PhD
 
 Emails: veraalva@ncbi.nlm.nih.gov, r78v10a07@gmail.com
 
-===
 # Public Domain notice
 
 ## National Center for Biotechnology Information.
