@@ -143,21 +143,22 @@ A bin folder will be created with the TPMCalculator executable.
 
 Usage: ./bin/TPMCalculator -g GTF_file -d BAM_files_directory -c NBC -t CLL
 
-./bin/TPMCalculator options:
+    ./bin/TPMCalculator options:
 
--v    Print info
--h    Display this usage information.
--g    GTF file
--d    Directory with the BAM files
--c    Control identification string. This is a string pattern in the control BAM file names
--t    Treated identification string. This is a string pattern in the treated BAM file names
-
+    -v    Print info
+    -h    Display this usage information.
+    -g    GTF file
+    -d    Directory with the BAM files
+    -c    Control identification string. This is a string pattern in the control BAM file names
+    -t    Treated identification string. This is a string pattern in the treated BAM file names
 
 ## Credits
 
 Roberto Vera Alvarez, PhD
+
 Emails: veraalva@ncbi.nlm.nih.gov, r78v10a07@gmail.com
 
+===
 # Public Domain notice
 
 ## National Center for Biotechnology Information.
