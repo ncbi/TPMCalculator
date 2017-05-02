@@ -94,9 +94,9 @@ namespace genome {
             this->strand = strand;
         }
 
-        bool isInside(unsigned int start, unsigned int end) {
-            if ((start >= this->start && start <= this->end) ||
-                    (end >= this->start && end <= this->end) ||
+        bool isInside(unsigned int start, unsigned int end, unsigned int overlap) {
+            if ((start >= this->start && start <= (this->end - overlap)) ||
+                    (end >= (this->start + overlap) && end <= this->end) ||
                     (start <= this->start && end >= this->end))return true;
             return false;
         }
@@ -201,7 +201,7 @@ namespace genome {
                     for (auto it1 = it; it1 != features.end(); ++it1) {
                         if (*it != *it1) {
                             if ((*it1).get()->getType().compare(featToUse) != 0) {
-                                if (!(*it).get()->isInside((*it1).get()->getStart(), (*it1).get()->getEnd())) break;
+                                if (!(*it).get()->isInside((*it1).get()->getStart(), (*it1).get()->getEnd(), 0)) break;
                             } else {
                                 f = std::make_shared<Feature < T >> (featToInsert, (*it).get()->getEnd() + 1, (*it1).get()->getStart() - 1);
                                 f.get()->setStrand((*it).get()->getStrand());

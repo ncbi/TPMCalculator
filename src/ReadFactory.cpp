@@ -55,22 +55,20 @@ void ReadFactory::processReadAtGenomeLevel(std::string chrName, std::string samp
 }
 
 void ReadFactory::processReadAtGeneLevel(SPtrGeneNGS gene, std::string sampleName, unsigned int start, unsigned int end) {
-    if (!gene->isInside(start, end)) return;
+    if (!gene->isInside(start, end, 8)) return;
     if (!gene->isProcessed()) gene->setProcessed(true);
     for (auto it = gene->getIsoforms().begin(); it != gene->getIsoforms().end(); ++it) {
-        //        if ((*it)->getId().compare("NM_001144002") == 0) {
         this->processReadAtIsoformLevel(*it, sampleName, start, end);
-        //        }
     }
 }
 
 void ReadFactory::processReadAtIsoformLevel(SPtrIsoformNGS isoform, std::string sampleName, unsigned int start, unsigned int end) {
-    if (!isoform->isInside(start, end)) return;
+    if (!isoform->isInside(start, end, 8)) return;
     isoform->setProcessed(true);
     SPtrSampleData s = isoform->getData().createSampleData(sampleName);
-    //    s->increaseReads();
+    s->increaseReads();
     for (auto it = isoform->getFeatures().begin(); it != isoform->getFeatures().end(); ++it) {
-        if ((*it)->isInside(start, end)) {
+        if ((*it)->isInside(start, end, 8)) {
             (*it)->getData().increaseReads(sampleName);
             if (end > (*it)->getEnd() && it != --(isoform->getFeatures().end())) {
                 s->increaseBridgeReads();
@@ -222,41 +220,45 @@ int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sample
     references = reader.GetReferenceData();
 
     while (reader.GetNextAlignment(al)) {
-        start = end = al.Position;
-        toRun = false;
-        for (auto it = al.CigarData.begin(); it != al.CigarData.end(); ++it) {
-            c = *it;
-            if (c.Type == 'N') {
-                toRun = true;
-                break;
-            }
-        }
-        if (toRun) {
-            len = 0;
-            start = al.Position;
+        if (al.IsMapped() && al.IsProperPair()) {
+            start = end = al.Position;
+            toRun = false;
             for (auto it = al.CigarData.begin(); it != al.CigarData.end(); ++it) {
                 c = *it;
-                len += c.Length;
                 if (c.Type == 'N') {
-                    processReadAtGenomeLevel(references[al.RefID].RefName, sampleName, start, end);
-                    start = end + 1 + c.Length;
-                    len = 0;
-                } else {
-                    end = start + len - 1;
+                    toRun = true;
+                    break;
                 }
             }
-            if (len != 0) {
-                processReadAtGenomeLevel(references[al.RefID].RefName, sampleName, start, end);
+            if (toRun) {
+                len = 0;
+                start = al.Position;
+                for (auto it = al.CigarData.begin(); it != al.CigarData.end(); ++it) {
+                    c = *it;
+                    len += c.Length;
+                    if (c.Type == 'N') {
+                        if (len >= 8) {
+                            processReadAtGenomeLevel(references[al.RefID].RefName, sampleName, start, end);
+                        }
+                        start = end + 1 + c.Length;
+                        len = 0;
+                    } else {
+                        end = start + len - 1;
+                    }
+                }
+                if (len >= 8) {
+                    processReadAtGenomeLevel(references[al.RefID].RefName, sampleName, start, end);
+                }
+            } else {
+                processReadAtGenomeLevel(references[al.RefID].RefName, sampleName, al.Position, al.GetEndPosition(true, true));
             }
-        } else {
-            processReadAtGenomeLevel(references[al.RefID].RefName, sampleName, al.Position, al.GetEndPosition(true, true));
+            count++;
         }
-        count++;
     }
 
     reader.Close();
 
-    PopulateReads(sampleName);
+//    PopulateReads(sampleName);
     calculateTPMperSample(sampleName);
     return count;
 }
@@ -357,7 +359,7 @@ int ReadFactory::processBAMSAMFromDir(std::string dirName, std::vector<std::stri
     while ((dp = readdir(dirp)) != NULL) {
         sufix.clear();
         string fName(dp->d_name);
-        if (fName[0] != '.') {
+        if (fName[0] != '.' && fName.size() >= 4) {
             if (fName.compare(fName.size() - BAMsufix.size(), BAMsufix.size(), BAMsufix) == 0) sufix = BAMsufix;
             else if (fName.compare(fName.size() - BAMsufix.size(), BAMsufix.size(), BAMsufix) == 0)sufix = SAMsufix;
         }
@@ -395,13 +397,7 @@ void ReadFactory::printResults(std::vector<std::string> groupFeatures) {
     SPtrGeneNGS g;
     SPtrIsoformNGS i;
     SPtrFeatureNGS f;
-    map<string, map<string, vector<double>>> groupValues;
-    map<string, map<string, vector<double>>>::iterator groupValuesIt;
-    map<string, vector<double>>::iterator groupValuesInIt;
-    vector<double> v0, v1;
     ofstream out, ent, exp, tpm;
-
-    cout << "Printing results" << endl;
 
     for (auto sIt = samples.begin(); sIt != samples.end(); ++sIt) {
         sampleFileName = *sIt + ".out";
@@ -433,36 +429,7 @@ void ReadFactory::printResults(std::vector<std::string> groupFeatures) {
                                     << "\t" << c->getId()
                                     << "\t" << i->getLength();
                             try {
-                                SPtrSampleData s = i->getData().getSampleData(*sIt);
-                                for (auto gIt = groupFeatures.begin(); gIt != groupFeatures.end(); ++gIt) {
-                                    if ((*sIt).compare(0, (*gIt).size(), (*gIt)) == 0) {
-                                        groupValuesIt = groupValues.find(i->getId());
-                                        if (groupValuesIt == groupValues.end()) {
-                                            map<string, vector<double>> m;
-                                            vector<double> v;
-                                            v.push_back(1); // Sample number
-                                            v.push_back(s->getTPMExon()); // Exon Sum/Mean
-                                            v.push_back(s->getTPMIntron()); // Intron Sum/Mean
-
-                                            m.insert(pair<string, vector<double>>((*gIt), v));
-                                            groupValues.insert(pair<string, map<string, vector<double>>>(i->getId(), m));
-                                        } else {
-                                            groupValuesInIt = groupValuesIt->second.find((*gIt));
-                                            if (groupValuesInIt == groupValuesIt->second.end()) {
-                                                vector<double> v;
-                                                v.push_back(1); // Sample number
-                                                v.push_back(s->getTPMExon()); // Exon Sum/Mean
-                                                v.push_back(s->getTPMIntron()); // Intron Sum/Mean
-                                                groupValuesIt->second.insert(pair<string, vector<double>>((*gIt), v));
-                                            } else {
-                                                groupValuesInIt->second[0] += 1;
-                                                groupValuesInIt->second[1] += s->getTPMExon();
-                                                groupValuesInIt->second[2] += s->getTPMIntron();
-                                            }
-                                        }
-                                        break;
-                                    }
-                                }
+                                SPtrSampleData s = i->getData().getSampleData(*sIt);                                
                                 out << "\t" << s->getReads()
                                         << "\t" << s->getTPM()
                                         << "\t" << s->getExonLength()
@@ -514,7 +481,6 @@ void ReadFactory::printResults(std::vector<std::string> groupFeatures) {
     }
 
     cout << "Printing mean values" << endl;
-
     sampleFileName = "intron_count_per_samples.txt";
     out.open(sampleFileName);
     if (!out.is_open()) {
@@ -556,75 +522,39 @@ void ReadFactory::printResults(std::vector<std::string> groupFeatures) {
                 for (auto it1 = g->getIsoforms().begin(); it1 != g->getIsoforms().end(); ++it1) {
                     i = *it1;
                     if (i->isProcessed()) {
-                        groupValuesIt = groupValues.find(i->getId());
-                        if (groupValuesIt != groupValues.end()) {
-                            groupValuesInIt = groupValuesIt->second.find(groupFeatures[0]);
-                            if (groupValuesInIt == groupValuesIt->second.end()) {
-                                v0.clear();
-                                v0.push_back(0);
-                                v0.push_back(0);
-                                v0.push_back(0);
-                            } else {
-                                v0 = groupValuesInIt->second;
+                        exp << g->getId() << "\t" << i->getId();
+                        tpm << g->getId() << "\t" << i->getId();
+                        for (auto sIt = samples.begin(); sIt != samples.end(); ++sIt) {
+                            try {
+                                SPtrSampleData s = i->getData().getSampleData(*sIt);
+                                exp << "\t" << s->getExonReads();
+                                tpm << "\t" << s->getTPMExon() << "\t" << s->getTPMIntron();
+                            } catch (exceptions::NotFoundException) {
+                                exp << "\t0";
+                                tpm << "\t0.000000\t0.000000";
                             }
-                            groupValuesInIt = groupValuesIt->second.find(groupFeatures[1]);
-                            if (groupValuesInIt == groupValuesIt->second.end()) {
-                                v1.clear();
-                                v1.push_back(0);
-                                v1.push_back(0);
-                                v1.push_back(0);
-                            } else {
-                                v1 = groupValuesInIt->second;
-                            }
+                        }
+                        exp << endl;
+                        tpm << endl;
 
-                            v0[1] = v0[1] / v0[0]; // Exon Sum/Mean
-                            v0[2] = v0[2] / v0[0]; // Intron Sum/Mean
-                            v1[1] = v1[1] / v1[0]; // Exon Sum/Mean
-                            v1[2] = v1[2] / v1[0]; // Intron Sum/Mean
-                            ent << g->getId()
-                                    << "\t" << i->getId()
-                                    << "\t" << v0[1]
-                                    << "\t" << v0[2]
-                                    << "\t" << v1[1]
-                                    << "\t" << v1[2]
-                                    << "\t" << std::log2(v0[1] / v1[1])
-                                    << "\t" << std::log2(v0[2] / v1[2])
-                                    << "\n";
-
-                            exp << g->getId() << "\t" << i->getId();
-                            tpm << g->getId() << "\t" << i->getId();
-                            for (auto sIt = samples.begin(); sIt != samples.end(); ++sIt) {
-                                try {
-                                    SPtrSampleData s = i->getData().getSampleData(*sIt);
-                                    exp << "\t" << s->getExonReads();
-                                    tpm << "\t" << s->getTPMExon() << "\t" << s->getTPMIntron();
-                                } catch (exceptions::NotFoundException) {
-                                    exp << "\t0";
-                                    tpm << "\t0\t0";
-                                }
-                            }
-                            exp << endl;
-                            tpm << endl;
-
-                            count = 1;
-                            for (auto fIt = i->getFeatures().begin(); fIt != i->getFeatures().end(); ++fIt) {
-                                f = *fIt;
-                                if (f->getType().compare("intron") == 0) {
-                                    out << g->getId() << "\t"
-                                            << i->getId() << "\t"
-                                            << count << "\t"
-                                            << i->getId() << "_" << count;
-                                    for (auto sIt = samples.begin(); sIt != samples.end(); ++sIt) {
-                                        try {
-                                            SPtrSampleData s = f->getData().getSampleData(*sIt);
-                                            out << "\t" << s->getReads();
-                                        } catch (exceptions::NotFoundException) {
-                                            out << "\t0";
-                                        }
+                        count = 1;
+                        for (auto fIt = i->getFeatures().begin(); fIt != i->getFeatures().end(); ++fIt) {
+                            f = *fIt;
+                            if (f->getType().compare("intron") == 0) {
+                                out << g->getId() << "\t"
+                                        << i->getId() << "\t"
+                                        << count << "\t"
+                                        << i->getId() << "_" << count;
+                                for (auto sIt = samples.begin(); sIt != samples.end(); ++sIt) {
+                                    try {
+                                        SPtrSampleData s = f->getData().getSampleData(*sIt);
+                                        out << "\t" << s->getReads();
+                                    } catch (exceptions::NotFoundException) {
+                                        out << "\t0";
                                     }
-                                    count++;
-                                    out << endl;
                                 }
+                                count++;
+                                out << endl;
                             }
                         }
                     }
@@ -632,7 +562,6 @@ void ReadFactory::printResults(std::vector<std::string> groupFeatures) {
             }
         }
     }
-    ent.close();
     out.close();
     exp.close();
     tpm.close();

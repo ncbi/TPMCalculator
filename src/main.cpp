@@ -65,8 +65,6 @@ int main(int argc, char *argv[]) {
                 print_usage(argv[0], 0);
             } else if (option.compare(1, 1, "v") == 0) {
                 Global::instance()->setVerbose(1);
-            } else if (option.compare(1, 1, "d") == 0) {
-                Global::instance()->setVerbose(3);
             } else if (option.compare(1, 1, "g") == 0) {
                 i++;
                 if (i < argc) {
@@ -158,8 +156,10 @@ int main(int argc, char *argv[]) {
     cerr << "Parsing BAM file" << endl;
     count = readFactory.processBAMSAMFromDir(bamDirName, groupPrefix);
     cerr << count << " reads processed in " << uTime.getElapseTimeSec() << " seconds" << endl;
+    fflush(NULL);
 
     cerr << "Printing results" << endl;
+    fflush(NULL);
     readFactory.printResults(groupPrefix);
 
     cerr << "Total time: " << uTime.getTotalTimeSec() << " seconds" << endl;
