@@ -36,7 +36,7 @@ void print_usage(char *program_name, int exit_code) {
     cerr << "-g    GTF file\n";
     cerr << "-d    Directory with the BAM files\n";
     cerr << "-b    BAM file\n";
-    cerr << "-k    Gene key to use from GTF file. Default: gene_name\n";
+    cerr << "-k    Gene key to use from GTF file. Default: gene_id\n";
     cerr << "-t    Transcript key to use from GTF file. Default: transcript_id\n";
     cerr << "-c    Smaller size allowed for an intron created for genes. Default: 16. We recommend to use the reads length\n";
     cerr << "-p    Use only properly paired reads. Default: No. Recommended for paired-end reads.\n";
