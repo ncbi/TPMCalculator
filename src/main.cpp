@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <algorithm>
 #include <memory>
+#include <random>
+#include <chrono>
 
 #include "api/BamReader.h"
 
@@ -13,11 +15,13 @@
 #include "TimeUtils.h"
 #include "bstring.h"
 #include "TextParser.h"
+#include "Sequence.h"
 #include "GenomeFactory.h"
 #include "ReadFactory.h"
 
 using namespace std;
 using namespace ngs;
+using namespace sequence;
 using namespace genome;
 using namespace BamTools;
 
@@ -31,10 +35,11 @@ void print_usage(char *program_name, int exit_code) {
     cerr << "-h    Display this usage information.\n";
     cerr << "-g    GTF file\n";
     cerr << "-d    Directory with the BAM files\n";
-    cerr << "-c    Control sample identification prefix. This is a prefix pattern in the control BAM file names\n";
-    cerr << "-t    Treated sample identification prefix. This is a prefix pattern in the treated BAM file names\n";
-
-
+    cerr << "-b    BAM file\n";
+    cerr << "-k    Gene key to use from GTF file. Default: gene_name\n";
+    cerr << "-t    Transcript key to use from GTF file. Default: transcript_id\n";
+    cerr << "-c    Smaller size allowed for an intron created for genes. Default: 16. We recommend to use the reads length\n";
+    cerr << "-p    Use only properly paired reads. Default: No. Recommended for paired-end reads.\n";
     cerr << "\n********************************************************************************\n";
     cerr << "\n                        Roberto Vera Alvarez, PhD\n";
     cerr << "            Emails: veraalva@ncbi.nlm.nih.gov, r78v10a07@gmail.com\n\n";
@@ -47,14 +52,19 @@ int main(int argc, char *argv[]) {
     TimeUtils uTime;
     string gtfFileName;
     string bamDirName;
+    string bamFileName;
+    string geneNameKey = "gene_id";
+    string transcriptNameKey = "transcript_id";
+    int intronCutOff = 16;
+    bool onlyProperlyPaired = false;
+    bool singleFile = false;
     set<string>features = {"exon"};
     unordered_map<string, string> featuresToCreate = {
         {"exon", "intron"}
     };
-    string ctrl, treated;
     ReadFactory readFactory;
-    
-    if (argc == 1){
+
+    if (argc == 1) {
         print_usage(argv[0], 0);
     }
 
@@ -89,32 +99,57 @@ int main(int argc, char *argv[]) {
                     cerr << "Option d require an argument" << endl;
                     print_usage(argv[0], -1);
                 }
-            } else if (option.compare(1, 1, "c") == 0) {
+            } else if (option.compare(1, 1, "b") == 0) {
                 i++;
                 if (i < argc) {
-                    ctrl = argv[i];
-                    if (ctrl.compare(0, 1, "-") == 0) {
-                        cerr << "Option c require an argument" << endl;
+                    bamFileName = argv[i];
+                    if (bamFileName.compare(0, 1, "-") == 0) {
+                        cerr << "Option b require an argument" << endl;
                         print_usage(argv[0], -1);
                     }
-
                 } else {
-                    cerr << "Option c require an argument" << endl;
+                    cerr << "Option b require an argument" << endl;
+                    print_usage(argv[0], -1);
+                }
+            } else if (option.compare(1, 1, "k") == 0) {
+                i++;
+                if (i < argc) {
+                    geneNameKey = argv[i];
+                    if (geneNameKey.compare(0, 1, "-") == 0) {
+                        cerr << "Option k require an argument" << endl;
+                        print_usage(argv[0], -1);
+                    }
+                } else {
+                    cerr << "Option k require an argument" << endl;
                     print_usage(argv[0], -1);
                 }
             } else if (option.compare(1, 1, "t") == 0) {
                 i++;
                 if (i < argc) {
-                    treated = argv[i];
-                    if (treated.compare(0, 1, "-") == 0) {
+                    transcriptNameKey = argv[i];
+                    if (transcriptNameKey.compare(0, 1, "-") == 0) {
                         cerr << "Option t require an argument" << endl;
                         print_usage(argv[0], -1);
                     }
-
                 } else {
                     cerr << "Option t require an argument" << endl;
                     print_usage(argv[0], -1);
                 }
+            } else if (option.compare(1, 1, "c") == 0) {
+                i++;
+                if (i < argc) {
+                    string argument(argv[i]);
+                    if (argument.compare(0, 1, "-") == 0) {
+                        cerr << "Option c require an argument" << endl;
+                        print_usage(argv[0], -1);
+                    }
+                    intronCutOff = atoi(argv[i]);
+                } else {
+                    cerr << "Option t require an argument" << endl;
+                    print_usage(argv[0], -1);
+                }
+            } else if (option.compare(1, 1, "p") == 0) {
+                onlyProperlyPaired = true;
             } else {
                 cerr << "Unsupported option: " << option << endl;
                 print_usage(argv[0], -1);
@@ -130,37 +165,49 @@ int main(int argc, char *argv[]) {
         print_usage(argv[0], -1);
     }
 
-    if (bamDirName.empty()) {
-        cerr << "\nDirectory with the BAM files is required. See -d option" << endl;
+    if (bamDirName.empty() && bamFileName.empty()) {
+        cerr << "\nDirectory with the BAM files or a BAM file is required. See -d or -b options" << endl;
         print_usage(argv[0], -1);
     }
-
-    if (ctrl.empty()) {
-        cerr << "\nControl identification string is required. See -c option" << endl;
-        print_usage(argv[0], -1);
-    }
-
-    if (treated.empty()) {
-        cerr << "\nTreated identification string is required. See -d option" << endl;
-        print_usage(argv[0], -1);
-    }
-    vector<string> groupPrefix = {ctrl, treated};
-
 
     uTime.setTime();
     cerr << "Reading GTF file ... " << endl;
-    readFactory.getGenomeFactory().processGTFFile(gtfFileName, "gene_name", "transcript_id", features, featuresToCreate);
+    readFactory.getGenomeFactory().setIntronCutOff(intronCutOff);
+    readFactory.getGenomeFactory().processGTFFile(gtfFileName, geneNameKey, transcriptNameKey, features, featuresToCreate);
     cerr << "Done in " << uTime.getElapseTimeSec() << " seconds" << endl;
 
-    uTime.setTime();
-    cerr << "Parsing BAM file" << endl;
-    count = readFactory.processBAMSAMFromDir(bamDirName, groupPrefix);
-    cerr << count << " reads processed in " << uTime.getElapseTimeSec() << " seconds" << endl;
-    fflush(NULL);
+    if (!bamDirName.empty()) {
+        uTime.setTime();
+        cerr << "Parsing BAM files" << endl;
+        fflush(NULL);
+        count = readFactory.processBAMSAMFromDir(bamDirName, onlyProperlyPaired);
+        cerr << count << " reads processed in " << uTime.getElapseTimeSec() << " seconds" << endl;
+        fflush(NULL);
+    } else if (!bamFileName.empty()) {
+        singleFile = true;
+        string fileName = bamFileName;
+        string sampleName;
+        size_t sep = fileName.find_last_of("\\/");
+        if (sep != std::string::npos)
+            fileName = fileName.substr(sep + 1, fileName.size() - sep - 1);
+        size_t dot = fileName.find_last_of(".");
+        if (dot != std::string::npos) {
+            sampleName = fileName.substr(0, dot);
+            if (fileName.substr(dot, fileName.size() - dot) == ".bam") {
+                uTime.setTime();
+                cerr << "Parsing sample: " << sampleName;
+                fflush(NULL);                
+                readFactory.getSamples().push_back(sampleName);
+                count = readFactory.processReadsFromBAM(bamFileName, sampleName, onlyProperlyPaired);
+                cerr << " " << count << " reads processed in " << uTime.getElapseTimeSec() << " seconds" << endl;
+                fflush(NULL);
+            }
+        }
+    }
 
     cerr << "Printing results" << endl;
     fflush(NULL);
-    readFactory.printResults(groupPrefix);
+    readFactory.printResults(singleFile);
 
     cerr << "Total time: " << uTime.getTotalTimeSec() << " seconds" << endl;
     return 0;

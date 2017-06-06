@@ -12,7 +12,10 @@
 #include <vector>
 #include <fstream>
 #include <set>
-
+#include <algorithm> 
+#include <functional> 
+#include <cctype>
+#include <locale>
 #include "Exceptions.h"
 #include "TextParser.h"
 #include "bstring.h"

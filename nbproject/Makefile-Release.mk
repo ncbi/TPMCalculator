@@ -36,6 +36,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/src/FastaFactory.o \
+	${OBJECTDIR}/src/RandomFactory.o \
 	${OBJECTDIR}/src/ReadFactory.o \
 	${OBJECTDIR}/src/TextParser.o \
 	${OBJECTDIR}/src/bstring.o \
@@ -70,6 +71,11 @@ ${OBJECTDIR}/src/FastaFactory.o: src/FastaFactory.cpp
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Iincludes -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/FastaFactory.o src/FastaFactory.cpp
+
+${OBJECTDIR}/src/RandomFactory.o: src/RandomFactory.cpp
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Iincludes -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/RandomFactory.o src/RandomFactory.cpp
 
 ${OBJECTDIR}/src/ReadFactory.o: src/ReadFactory.cpp
 	${MKDIR} -p ${OBJECTDIR}/src

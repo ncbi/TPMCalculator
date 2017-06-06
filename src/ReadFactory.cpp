@@ -24,11 +24,14 @@
 #include "TimeUtils.h"
 #include "bstring.h"
 #include "TextParser.h"
+#include "Sequence.h"
 #include "GenomeFactory.h"
 #include "ReadFactory.h"
+#include "RandomFactory.h"
 
 using namespace std;
 using namespace parsers;
+using namespace sequence;
 using namespace ngs;
 using namespace BamTools;
 using namespace genome;
@@ -54,11 +57,40 @@ void ReadFactory::processReadAtGenomeLevel(std::string chrName, std::string samp
     }
 }
 
+void ReadFactory::processReadAtGenomeLevelUnique(std::string chrName, std::string sampleName, unsigned int start, unsigned int end) {
+    bool done = false;
+    GeneMultiSetNGS::iterator geneIt;
+    try {
+        geneIt = genomeFactory.findGeneUpperBound(chrName, start, end);
+        for (auto it = geneIt;; --it) {
+            this->processReadAtGeneLevelUnique(*it, sampleName, start, end);
+            if (done) break;
+            if ((*it)->getEnd() < start) done = true;
+            if (it == genomeFactory.getCurrentChr()->getGenes().begin()) break;
+        }
+    } catch (exceptions::NotFoundException) {
+    }
+}
+
 void ReadFactory::processReadAtGeneLevel(SPtrGeneNGS gene, std::string sampleName, unsigned int start, unsigned int end) {
     if (!gene->isInside(start, end, 8)) return;
     if (!gene->isProcessed()) gene->setProcessed(true);
     for (auto it = gene->getIsoforms().begin(); it != gene->getIsoforms().end(); ++it) {
         this->processReadAtIsoformLevel(*it, sampleName, start, end);
+    }
+}
+
+void ReadFactory::processReadAtGeneLevelUnique(SPtrGeneNGS gene, std::string sampleName, unsigned int start, unsigned int end) {
+    if (!gene->isInside(start, end, 8)) return;
+    if (!gene->isProcessed()) gene->setProcessed(true);
+    SPtrSampleData s = gene->getData().createSampleData(sampleName);
+    for (auto it = gene->getUniquefeatures().begin(); it != gene->getUniquefeatures().end(); ++it) {
+        if ((*it)->isInside(start, end, 8)) {
+            (*it)->getData().increaseReads(sampleName);
+            if (end > (*it)->getEnd() && it != --(gene->getUniquefeatures().end())) {
+                s->increaseBridgeReads();
+            }
+        }
     }
 }
 
@@ -80,7 +112,6 @@ void ReadFactory::processReadAtIsoformLevel(SPtrIsoformNGS isoform, std::string 
 void ReadFactory::PopulateReads(std::string sampleName) {
     SPtrChromosomeNGS c;
     SPtrGeneNGS g;
-    SPtrIsoformNGS i;
     SPtrFeatureNGS f;
 
     for (auto cIt = genomeFactory.getChromosomes().begin(); cIt != genomeFactory.getChromosomes().end(); ++cIt) {
@@ -88,10 +119,9 @@ void ReadFactory::PopulateReads(std::string sampleName) {
         for (auto gIt = c->getGenes().begin(); gIt != c->getGenes().end(); ++gIt) {
             g = *gIt;
             if (g->isProcessed()) {
-                for (auto iIt = g->getIsoforms().begin(); iIt != g->getIsoforms().end(); ++iIt) {
-                    i = *iIt;
-                    SPtrSampleData s = i->getData().createSampleData(sampleName);
-                    for (auto fIt = i->getFeatures().begin(); fIt != i->getFeatures().end(); ++fIt) {
+                try {
+                    SPtrSampleData s = g->getData().createSampleData(sampleName);
+                    for (auto fIt = g->getUniquefeatures().begin(); fIt != g->getUniquefeatures().end(); ++fIt) {
                         f = *fIt;
                         try {
                             if (f->getData().getSampleData(sampleName)->getReads() != 0 && f->getType().compare("exon") == 0) {
@@ -100,6 +130,7 @@ void ReadFactory::PopulateReads(std::string sampleName) {
                         } catch (exceptions::NotFoundException) {
                         }
                     }
+                } catch (exceptions::NotFoundException) {
                 }
             }
         }
@@ -111,7 +142,10 @@ void ReadFactory::calculateTPMperSample(std::string sampleName) {
     SPtrGeneNGS g;
     SPtrIsoformNGS i;
     SPtrFeatureNGS f;
-    double T = 0.0;
+    double TGene = 0.0;
+    double TIsoform = 0.0;
+    double TGeneExon = 0.0;
+    double TGeneIntron = 0.0;
     double TIsoformExon = 0.0;
     double TIsoformIntron = 0.0;
     double TBridges = 0.0;
@@ -122,6 +156,34 @@ void ReadFactory::calculateTPMperSample(std::string sampleName) {
         for (auto gIt = c->getGenes().begin(); gIt != c->getGenes().end(); ++gIt) {
             g = *gIt;
             if (g->isProcessed()) {
+                try {
+                    SPtrSampleData s = g->getData().getSampleData(sampleName);
+                    TGene += static_cast<double> (s->getReads()) / static_cast<double> (g->getLength());
+
+                    for (auto fIt = g->getUniquefeatures().begin(); fIt != g->getUniquefeatures().end(); ++fIt) {
+                        f = *fIt;
+                        try {
+                            SPtrSampleData sf = f->getData().getSampleData(sampleName);
+
+                            if (f->getType().compare("exon") == 0) {
+                                s->increaseExonReads(sf->getReads());
+                                s->increaseExonLength(f->getLength());
+                            } else if (f->getType().compare("intron") == 0) {
+                                s->increaseIntronReads(sf->getReads());
+                                s->increaseIntronLength(f->getLength());
+                            }
+                        } catch (exceptions::NotFoundException) {
+                        }
+                    }
+                    if (s->getExonLength() > 0) {
+                        TGeneExon += static_cast<double> (s->getExonReads()) / static_cast<double> (s->getExonLength());
+                    }
+                    if (s->getIntronLength() > 0) {
+                        TGeneIntron += static_cast<double> (s->getIntronReads()) / static_cast<double> (s->getIntronLength());
+                    }
+                } catch (exceptions::NotFoundException) {
+                }
+
                 for (auto iIt = g->getIsoforms().begin(); iIt != g->getIsoforms().end(); ++iIt) {
                     i = *iIt;
                     if (i->isProcessed()) {
@@ -129,7 +191,7 @@ void ReadFactory::calculateTPMperSample(std::string sampleName) {
                         try {
                             SPtrSampleData s = i->getData().createSampleData(sampleName);
 
-                            T += static_cast<double> (s->getReads()) / static_cast<double> (i->getLength());
+                            TIsoform += static_cast<double> (s->getReads()) / static_cast<double> (i->getLength());
                             if (i->getFeatures().size() > 1) {
                                 TBridges += static_cast<double> (s->getBridgeReads()) / static_cast<double> ((i->getFeatures().size() - 1));
                             }
@@ -167,12 +229,39 @@ void ReadFactory::calculateTPMperSample(std::string sampleName) {
         for (auto gIt = c->getGenes().begin(); gIt != c->getGenes().end(); ++gIt) {
             g = *gIt;
             if (g->isProcessed()) {
+
+                try {
+                    SPtrSampleData s = g->getData().getSampleData(sampleName);
+                    s->setTPM(static_cast<double> (s->getReads() * 1.0E6) / static_cast<double> (i->getLength() * TGene));
+
+                    if (s->getExonLength() != 0) {
+                        s->setTPMExon(static_cast<double> (s->getExonReads() * 1.0E6) / static_cast<double> (s->getExonLength() * TGeneExon));
+                    }
+                    if (s->getIntronLength() != 0) {
+                        s->setTPMIntron(static_cast<double> (s->getIntronReads() * 1.0E6) / static_cast<double> (s->getIntronLength() * TGeneIntron));
+                    }
+
+                    for (auto fIt = g->getUniquefeatures().begin(); fIt != g->getUniquefeatures().end(); ++fIt) {
+                        f = *fIt;
+                        try {
+                            SPtrSampleData sf = f->getData().getSampleData(sampleName);
+                            if (f->getType().compare("exon") == 0) {
+                                sf->setTPM(static_cast<double> (sf->getReads() * 1.0E6) / static_cast<double> (f->getLength() * TGeneExon));
+                            } else if (f->getType().compare("intron") == 0) {
+                                sf->setTPM(static_cast<double> (sf->getReads() * 1.0E6) / static_cast<double> (f->getLength() * TGeneIntron));
+                            }
+                        } catch (exceptions::NotFoundException) {
+                        }
+                    }
+                } catch (exceptions::NotFoundException) {
+                }
+
                 for (auto iIt = g->getIsoforms().begin(); iIt != g->getIsoforms().end(); ++iIt) {
                     i = *iIt;
                     if (i->isProcessed()) {
                         try {
                             SPtrSampleData s = i->getData().getSampleData(sampleName);
-                            s->setTPM(static_cast<double> (s->getReads() * 1.0E6) / static_cast<double> (i->getLength() * T));
+                            s->setTPM(static_cast<double> (s->getReads() * 1.0E6) / static_cast<double> (i->getLength() * TIsoform));
 
                             if (i->getFeatures().size() > 1) {
                                 s->setTPMBridges(static_cast<double> (s->getBridgeReads() * 1.0E6) / static_cast<double> ((i->getFeatures().size() - 1) * TBridges));
@@ -207,7 +296,7 @@ void ReadFactory::calculateTPMperSample(std::string sampleName) {
     }
 }
 
-int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sampleName) {
+int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sampleName, bool onlyProperlyPaired) {
     BamAlignment al;
     CigarOp c;
     bool toRun;
@@ -218,9 +307,11 @@ int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sample
     }
     header = reader.GetHeader();
     references = reader.GetReferenceData();
-
     while (reader.GetNextAlignment(al)) {
-        if (al.IsMapped() && al.IsProperPair()) {
+        toRun = false;
+        if (al.IsMapped()) toRun = true;
+        if (toRun && onlyProperlyPaired && !al.IsProperPair()) toRun = false;
+        if (toRun) {
             start = end = al.Position;
             toRun = false;
             for (auto it = al.CigarData.begin(); it != al.CigarData.end(); ++it) {
@@ -239,6 +330,7 @@ int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sample
                     if (c.Type == 'N') {
                         if (len >= 8) {
                             processReadAtGenomeLevel(references[al.RefID].RefName, sampleName, start, end);
+                            processReadAtGenomeLevelUnique(references[al.RefID].RefName, sampleName, start, end);
                         }
                         start = end + 1 + c.Length;
                         len = 0;
@@ -248,73 +340,17 @@ int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sample
                 }
                 if (len >= 8) {
                     processReadAtGenomeLevel(references[al.RefID].RefName, sampleName, start, end);
+                    processReadAtGenomeLevelUnique(references[al.RefID].RefName, sampleName, start, end);
                 }
             } else {
                 processReadAtGenomeLevel(references[al.RefID].RefName, sampleName, al.Position, al.GetEndPosition(true, true));
+                processReadAtGenomeLevelUnique(references[al.RefID].RefName, sampleName, al.Position, al.GetEndPosition(true, true));
             }
             count++;
         }
     }
 
     reader.Close();
-
-//    PopulateReads(sampleName);
-    calculateTPMperSample(sampleName);
-    return count;
-}
-
-int ReadFactory::processReadsFromSAM(std::string samFileName, std::string sampleName) {
-    TextParser fParser;
-    int count = 0;
-    CigarOp c;
-    bool toRun;
-    int32_t start, end, len;
-    std::vector<CigarOp> cigarVec;
-
-    try {
-        fParser.setFileToParse((samFileName));
-        while (fParser.iterate("#", "\t")) {
-            if (fParser.getWords().size() < 9) {
-                cerr << "SAM file with wrong number of fields. It should be 12 tab separated fields" << endl;
-                exit(-1);
-            }
-            cigarVec = processCigar(fParser.getWords()[5]);
-
-            start = end = atoi(fParser.getWords()[3].c_str());
-            toRun = false;
-            for (auto it = cigarVec.begin(); it != cigarVec.end(); ++it) {
-                c = *it;
-                if (c.Type == 'N') {
-                    toRun = true;
-                    break;
-                }
-            }
-            if (toRun) {
-                len = 0;
-                for (auto it = cigarVec.begin(); it != cigarVec.end(); ++it) {
-                    c = *it;
-                    len += c.Length;
-                    if (c.Type == 'N') {
-                        processReadAtGenomeLevel(fParser.getWords()[2], sampleName, start, end);
-                        start = end + 1 + c.Length;
-                        len = 0;
-                    } else {
-                        end = start + len - 1;
-                    }
-                }
-                if (len != 0) {
-                    processReadAtGenomeLevel(fParser.getWords()[2], sampleName, start, end);
-                }
-            } else {
-                processReadAtGenomeLevel(fParser.getWords()[2], sampleName, atoi(fParser.getWords()[3].c_str()), atoi(fParser.getWords()[3].c_str()) + strlen(fParser.getWords()[9].c_str()) - 1);
-            }
-            count++;
-        }
-    } catch (exceptions::FileHandledException ex) {
-        std::cerr << ex.what() << std::endl;
-        std::cerr << "Error parsing file" << std::endl;
-        exit(-1);
-    }
 
     PopulateReads(sampleName);
     calculateTPMperSample(sampleName);
@@ -337,19 +373,14 @@ std::vector<CigarOp> ReadFactory::processCigar(std::string cigar) {
     return cigarVec;
 }
 
-int ReadFactory::processBAMSAMFromDir(std::string dirName, std::vector<std::string> groupFeatures) {
+int ReadFactory::processBAMSAMFromDir(std::string dirName, bool onlyProperlyPaired) {
     int count = 0;
     int totalCount = 0;
     struct dirent *dp;
-    string sufix;
     string BAMsufix(".bam");
-    string SAMsufix(".sam");
     TimeUtils uTime;
     string sampleFileName;
 
-    if (groupFeatures.size() != 2) {
-        cerr << "Sorry, this program can only manage 2 groups of data" << endl;
-    }
     DIR *dirp = (DIR *) opendir(dirName.c_str());
     if (!dirp) {
         cerr << "Can't open directory: " << dirName << endl;
@@ -357,32 +388,25 @@ int ReadFactory::processBAMSAMFromDir(std::string dirName, std::vector<std::stri
     }
 
     while ((dp = readdir(dirp)) != NULL) {
-        sufix.clear();
         string fName(dp->d_name);
         if (fName[0] != '.' && fName.size() >= 4) {
-            if (fName.compare(fName.size() - BAMsufix.size(), BAMsufix.size(), BAMsufix) == 0) sufix = BAMsufix;
-            else if (fName.compare(fName.size() - BAMsufix.size(), BAMsufix.size(), BAMsufix) == 0)sufix = SAMsufix;
-        }
-        if (!sufix.empty()) {
-            string fileName = dirName + "/" + fName;
-            sampleFileName = fName;
-            sampleFileName.replace(fName.size() - sufix.size(), sufix.size(), "");
-            uTime.setTime();
-            cerr << "Processing sample: " << sampleFileName;
-            samples.push_back(sampleFileName);
-            cerr.flush();
-            try {
-                if (sufix.compare(BAMsufix) == 0) {
-                    count = processReadsFromBAM(fileName, sampleFileName);
-                } else {
-                    count = processReadsFromSAM(fileName, sampleFileName);
+            if (fName.compare(fName.size() - BAMsufix.size(), BAMsufix.size(), BAMsufix) == 0) {
+                string fileName = dirName + "/" + fName;
+                sampleFileName = fName;
+                sampleFileName.replace(fName.size() - BAMsufix.size(), BAMsufix.size(), "");
+                uTime.setTime();
+                cerr << "Processing sample: " << sampleFileName;
+                samples.push_back(sampleFileName);
+                cerr.flush();
+                try {
+                    count = processReadsFromBAM(fileName, sampleFileName, onlyProperlyPaired);
+                    totalCount += count;
+                } catch (exceptions::NotFoundException) {
+                    cerr << "Can't open file " << fileName << endl;
+                    exit(-1);
                 }
-                totalCount += count;
-            } catch (exceptions::NotFoundException) {
-                cerr << "Can't open file " << fileName << endl;
-                exit(-1);
+                cerr << " in " << uTime.getElapseTimeSec() << " seconds. Processed " << count << " reads" << endl;
             }
-            cerr << " in " << uTime.getElapseTimeSec() << " seconds. Processed " << count << " reads" << endl;
         }
     }
     closedir(dirp);
@@ -390,17 +414,17 @@ int ReadFactory::processBAMSAMFromDir(std::string dirName, std::vector<std::stri
     return totalCount;
 }
 
-void ReadFactory::printResults(std::vector<std::string> groupFeatures) {
+void ReadFactory::printResults(bool singleFile) {
     int count = 0;
     string sampleFileName;
     SPtrChromosomeNGS c;
     SPtrGeneNGS g;
     SPtrIsoformNGS i;
     SPtrFeatureNGS f;
-    ofstream out, ent, exp, tpm;
+    ofstream out, ent, out_unique, ent_unique, out_gene;
 
     for (auto sIt = samples.begin(); sIt != samples.end(); ++sIt) {
-        sampleFileName = *sIt + ".out";
+        sampleFileName = *sIt + "_transcripts.out";
         out.open(sampleFileName);
         if (!out.is_open()) {
             cerr << "Can't open file " << sampleFileName << endl;
@@ -408,10 +432,26 @@ void ReadFactory::printResults(std::vector<std::string> groupFeatures) {
         }
         out << "Gene_Id\tTranscript_Id\tChr\tLength\tCount_Reads\tTPM\tExon_Length\tExon_Count_Reads\tExon_TPM\tIntron_Length\tIntron_Count_Reads\tIntron_TPM" << endl;
 
-        sampleFileName = *sIt + ".ent";
+        sampleFileName = *sIt + "_transcripts.ent";
         ent.open(sampleFileName);
         ent << "Gene_Id\tTranscript_Id\tChr\tType\tType_Number\tstart\tend\tLength\tCount_Reads\tTPM" << endl;
         if (!ent.is_open()) {
+            cerr << "Can't open file " << sampleFileName << endl;
+            exit(-1);
+        }
+
+        sampleFileName = *sIt + "_genes.out";
+        out_unique.open(sampleFileName);
+        if (!out_unique.is_open()) {
+            cerr << "Can't open file " << sampleFileName << endl;
+            exit(-1);
+        }
+        out_unique << "Gene_Id\tChr\tLength\tCount_Reads\tTPM\tExon_Length\tExon_Count_Reads\tExon_TPM\tIntron_Length\tIntron_Count_Reads\tIntron_TPM" << endl;
+
+        sampleFileName = *sIt + "_genes.ent";
+        ent_unique.open(sampleFileName);
+        ent_unique << "Gene_Id\tChr\tType\tType_Number\tstart\tend\tLength\tCount_Reads\tTPM" << endl;
+        if (!ent_unique.is_open()) {
             cerr << "Can't open file " << sampleFileName << endl;
             exit(-1);
         }
@@ -421,6 +461,51 @@ void ReadFactory::printResults(std::vector<std::string> groupFeatures) {
             for (auto it = c->getGenes().begin(); it != c->getGenes().end(); ++it) {
                 g = *it;
                 if (g->isProcessed()) {
+                    out_unique << g->getId()
+                            << "\t" << c->getId()
+                            << "\t" << g->getLength();
+                    try {
+                        SPtrSampleData s = g->getData().getSampleData(*sIt);
+                        out_unique << "\t" << s->getReads()
+                                << "\t" << s->getTPM()
+                                << "\t" << s->getExonLength()
+                                << "\t" << s->getExonReads()
+                                << "\t" << s->getTPMExon()
+                                << "\t" << s->getIntronLength()
+                                << "\t" << s->getIntronReads()
+                                << "\t" << s->getTPMIntron()
+                                << endl;
+                    } catch (exceptions::NotFoundException) {
+                        out_unique << "\t0\t0.000000\t0\t0\t0.000000\t0\t0\t0.000000" << endl;
+                    }
+                    count = 1;
+                    for (auto fIt = g->getUniquefeatures().begin(); fIt != g->getUniquefeatures().end(); ++fIt) {
+                        f = *fIt;
+                        try {
+                            SPtrSampleData s = f->getData().getSampleData(*sIt);
+                            ent_unique << g->getId()
+                                    << "\t" << c->getId()
+                                    << "\t" << f->getType()
+                                    << "\t" << count++
+                                    << "\t" << f->getStart()
+                                    << "\t" << f->getEnd()
+                                    << "\t" << f->getLength()
+                                    << "\t" << s->getReads()
+                                    << "\t" << s->getTPM()
+                                    << endl;
+                        } catch (exceptions::NotFoundException) {
+                            ent_unique << g->getId()
+                                    << "\t" << c->getId()
+                                    << "\t" << f->getType()
+                                    << "\t" << count++
+                                    << "\t" << f->getStart()
+                                    << "\t" << f->getEnd()
+                                    << "\t" << f->getLength()
+                                    << "\t0\t0.000000"
+                                    << endl;
+                        }
+                    }
+
                     for (auto it1 = g->getIsoforms().begin(); it1 != g->getIsoforms().end(); ++it1) {
                         i = *it1;
                         if (i->isProcessed()) {
@@ -429,7 +514,7 @@ void ReadFactory::printResults(std::vector<std::string> groupFeatures) {
                                     << "\t" << c->getId()
                                     << "\t" << i->getLength();
                             try {
-                                SPtrSampleData s = i->getData().getSampleData(*sIt);                                
+                                SPtrSampleData s = i->getData().getSampleData(*sIt);
                                 out << "\t" << s->getReads()
                                         << "\t" << s->getTPM()
                                         << "\t" << s->getExonLength()
@@ -478,93 +563,77 @@ void ReadFactory::printResults(std::vector<std::string> groupFeatures) {
         }
         out.close();
         ent.close();
+        out_unique.close();
+        ent_unique.close();
     }
 
-    cout << "Printing mean values" << endl;
-    sampleFileName = "intron_count_per_samples.txt";
-    out.open(sampleFileName);
-    if (!out.is_open()) {
-        cerr << "Can't open file Intron_count_per_samples.txt" << endl;
-        exit(-1);
-    }
+    if (!singleFile) {
+        sampleFileName = "transcripts_data_per_samples.txt";
+        out.open(sampleFileName);
+        if (!out.is_open()) {
+            cerr << "Can't open file transcripts_data_per_samples.txt" << endl;
+            exit(-1);
+        }
 
-    sampleFileName = "transcript_count_per_samples.txt";
-    exp.open(sampleFileName);
-    if (!exp.is_open()) {
-        cerr << "Can't open file Transcript_expresion.txt" << endl;
-        exit(-1);
-    }
+        sampleFileName = "genes_data_per_samples.txt";
+        out_gene.open(sampleFileName);
+        if (!out_gene.is_open()) {
+            cerr << "Can't open file genes_data_per_samples.txt" << endl;
+            exit(-1);
+        }
 
-    sampleFileName = "transcript_all_per_sample.txt";
-    tpm.open(sampleFileName);
-    if (!tpm.is_open()) {
-        cerr << "Can't open file transcript_all_per_sample.txt" << endl;
-        exit(-1);
-    }
+        out << "Gene_Id\tTranscript_Id";
+        out_gene << "Gene_Id";
+        for (auto sIt = samples.begin(); sIt != samples.end(); ++sIt) {
+            out << "\t" << *sIt << "_exon_count\t" << *sIt << "_exon_TPM";
+            out << "\t" << *sIt << "_intron_count\t" << *sIt << "_intron_TPM";
+            out_gene << "\t" << *sIt << "_exon_count\t" << *sIt << "_exon_TPM";
+            out_gene << "\t" << *sIt << "_intron_count\t" << *sIt << "_intron_TPM";
+        }
+        out << endl;
+        out_gene << endl;
 
-    out << "Gene_Id\tTranscript_Id\tIntron_Number\tIntron_Id";
-    exp << "Gene_Id\tTranscript_Id";
-    tpm << "Gene_Id\tTranscript_Id";
-    for (auto sIt = samples.begin(); sIt != samples.end(); ++sIt) {
-        out << "\t" << *sIt;
-        exp << "\t" << *sIt;
-        tpm << "\t" << *sIt << "_exon\t" << *sIt << "_intron";
-    }
-    out << endl;
-    exp << endl;
-    tpm << endl;
-
-    for (auto cIt = genomeFactory.getChromosomes().begin(); cIt != genomeFactory.getChromosomes().end(); ++cIt) {
-        c = cIt->second;
-        for (auto it = c->getGenes().begin(); it != c->getGenes().end(); ++it) {
-            g = *it;
-            if (g->isProcessed()) {
-                for (auto it1 = g->getIsoforms().begin(); it1 != g->getIsoforms().end(); ++it1) {
-                    i = *it1;
-                    if (i->isProcessed()) {
-                        exp << g->getId() << "\t" << i->getId();
-                        tpm << g->getId() << "\t" << i->getId();
-                        for (auto sIt = samples.begin(); sIt != samples.end(); ++sIt) {
-                            try {
-                                SPtrSampleData s = i->getData().getSampleData(*sIt);
-                                exp << "\t" << s->getExonReads();
-                                tpm << "\t" << s->getTPMExon() << "\t" << s->getTPMIntron();
-                            } catch (exceptions::NotFoundException) {
-                                exp << "\t0";
-                                tpm << "\t0.000000\t0.000000";
-                            }
+        for (auto cIt = genomeFactory.getChromosomes().begin(); cIt != genomeFactory.getChromosomes().end(); ++cIt) {
+            c = cIt->second;
+            for (auto it = c->getGenes().begin(); it != c->getGenes().end(); ++it) {
+                g = *it;
+                if (g->isProcessed()) {
+                    out_gene << g->getId();
+                    for (auto sIt = samples.begin(); sIt != samples.end(); ++sIt) {
+                        try {
+                            SPtrSampleData s = g->getData().getSampleData(*sIt);
+                            out_gene << "\t" << s->getExonReads() << "\t" << s->getTPMExon();
+                            out_gene << "\t" << s->getIntronReads() << "\t" << s->getTPMIntron();
+                        } catch (exceptions::NotFoundException) {
+                            out_gene << "\t0\t0.000000";
+                            out_gene << "\t0\t0.000000";
                         }
-                        exp << endl;
-                        tpm << endl;
+                    }
+                    out_gene << endl;
 
-                        count = 1;
-                        for (auto fIt = i->getFeatures().begin(); fIt != i->getFeatures().end(); ++fIt) {
-                            f = *fIt;
-                            if (f->getType().compare("intron") == 0) {
-                                out << g->getId() << "\t"
-                                        << i->getId() << "\t"
-                                        << count << "\t"
-                                        << i->getId() << "_" << count;
-                                for (auto sIt = samples.begin(); sIt != samples.end(); ++sIt) {
-                                    try {
-                                        SPtrSampleData s = f->getData().getSampleData(*sIt);
-                                        out << "\t" << s->getReads();
-                                    } catch (exceptions::NotFoundException) {
-                                        out << "\t0";
-                                    }
+                    for (auto it1 = g->getIsoforms().begin(); it1 != g->getIsoforms().end(); ++it1) {
+                        i = *it1;
+                        if (i->isProcessed()) {
+                            out << g->getId() << "\t" << i->getId();
+                            for (auto sIt = samples.begin(); sIt != samples.end(); ++sIt) {
+                                try {
+                                    SPtrSampleData s = i->getData().getSampleData(*sIt);
+                                    out << "\t" << s->getExonReads() << "\t" << s->getTPMExon();
+                                    out << "\t" << s->getIntronReads() << "\t" << s->getTPMIntron();
+                                } catch (exceptions::NotFoundException) {
+                                    out << "\t0\t0.000000";
+                                    out << "\t0\t0.000000";
                                 }
-                                count++;
-                                out << endl;
                             }
+                            out << endl;
                         }
                     }
                 }
             }
         }
+        out.close();
+        out_gene.close();
     }
-    out.close();
-    exp.close();
-    tpm.close();
 }
 
 int ReadFactory::processReadsFromIsoformBAM(std::string bamFileName, std::string sample) {
@@ -642,3 +711,167 @@ int ReadFactory::processReadsFromIsoformBAM(std::string bamFileName, std::string
     return count;
 }
 
+void ReadFactory::createSIMSingleReadsIR(std::string outFileName, sequence::DNAContainer seqContainer, unsigned int numberFeat, unsigned int intronNumber, unsigned int len) {
+
+    Random rng = Random();
+    ofstream outputFile01(outFileName + "_genes.txt");
+    ofstream outputFile02(outFileName + "_IR_genes.txt");
+    ofstream outputFile1(outFileName + "_cond1.fa");
+    ofstream outputFile2(outFileName + "_cond2.fa");
+    for (ChromosomeUnMapItr<ReadData> cIt = genomeFactory.getChromosomes().begin();
+            cIt != genomeFactory.getChromosomes().end(); ++cIt) {
+        SPtrChromosomeNGS chromosome = cIt->second;
+
+        if (chromosome->getId().size() <= 5) {
+            try {
+                SPtrDNA d = seqContainer.getDNAFromID(chromosome->getId());
+                cout << "Getting " << chromosome->getId() << " chromosome sequence" << endl;
+                cout << "Chromosome length " << d->getLength() << endl;
+                set<pair<unsigned int, unsigned int>>genes_coord;
+                std::vector < SPtrGene < ReadData>> genes;
+
+                for (GeneMultiSetItr<ReadData> gIt = chromosome->getGenes().begin();
+                        gIt != chromosome->getGenes().end(); ++gIt) {
+                    SPtrGeneNGS gene = *gIt;
+                    bool selected = false;
+                    for (IsoformMultiSetItr<ReadData> iIt = gene->getIsoforms().begin(); iIt != gene->getIsoforms().end(); ++iIt) {
+                        SPtrIsoformNGS isoform = *iIt;
+                        if (isoform->getFeatures().size() >= (2 * numberFeat - 1)) {
+                            selected = true;
+                            break;
+                        }
+                    }
+                    if (selected) {
+                        selected = false;
+                        for (auto genesItr = genes_coord.begin(); genesItr != genes_coord.end(); ++genesItr) {
+                            pair<unsigned int, unsigned int> p = *genesItr;
+                            if (gene->isInside(p.first, p.second, 0)) {
+                                selected = true;
+                                break;
+                            }
+                        }
+                        if (!selected) {
+                            if (gene->getUniquefeatures().size() > 0) {
+                                pair<unsigned int, unsigned int> coord = make_pair(gene->getStart(), gene->getEnd());
+                                genes_coord.insert(coord);
+                                genes.push_back(gene);
+                                selected = false;
+                                for (auto coordItr = gene->getUniquefeatures().begin(); coordItr != gene->getUniquefeatures().end(); ++coordItr) {
+                                    SPtrFeatureNGS f = *coordItr;
+                                    if (f->getLength() > len && f->getType() == "exon") {
+                                        for (int k = 0; k < 2; k++) {
+                                            int readNumber = f->getLength() * rng.DrawNumber(2, 4);
+                                            for (int j = readNumber * 10000; j > 0; j--) {
+                                                unsigned int min = f->getStart() - 7;
+                                                unsigned int max = f->getEnd() + 8 - len;
+                                                unsigned int start_pos = rng.DrawNumber(min, max);
+                                                if (start_pos + len < d->getLength()) {
+                                                    DNA read = d->newSegment(start_pos, len);
+                                                    if (read.getSeq().find('N') == std::string::npos && read.getSeq().find('n') == std::string::npos) {
+                                                        readNumber--;
+                                                        selected = true;
+                                                        if (k == 0) {
+                                                            outputFile1 << ">" << read.getId() << ":" << start_pos << "-" << (start_pos + len - 1) << endl;
+                                                        } else {
+                                                            outputFile2 << ">" << read.getId() << ":" << start_pos << "-" << (start_pos + len - 1) << endl;
+                                                        }
+                                                        for (unsigned int i = 0; i < read.getLength(); i += 50) {
+                                                            char t = 0;
+                                                            if (i + 50 < read.getLength()) {
+                                                                t = read.getSeq()[i + 50];
+                                                                read.getSeq()[i + 50] = 0;
+                                                            }
+                                                            if (k == 0) {
+                                                                outputFile1 << (read.getSeq().c_str() + i) << endl;
+                                                            } else {
+                                                                outputFile2 << (read.getSeq().c_str() + i) << endl;
+                                                            }
+                                                            if (i + 50 < read.getLength()) {
+                                                                read.getSeq()[i + 50] = t;
+                                                            }
+                                                        }
+                                                        if (readNumber == 0) break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                if (selected) {
+                                    outputFile01 << chromosome->getId() << "\t" << gene->getId() << endl;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!genes.empty()) {
+                    /*
+                     * Selecting genes for IR
+                     */
+                    cout << "There are " << genes.size() << " loaded" << endl;
+                    cout << "20% of the genes (" << ((int) genes.size() / 5) << ") will get IR" << endl;
+                    for (int ii = 0; ii < (int) genes.size() / 5;) {
+                        unsigned int index = rng.DrawNumber(0, genes.size() - 1);
+                        SPtrGeneNGS gene = genes[index];
+                        if (gene->getUniquefeatures().size() > intronNumber) {
+                            unsigned int k = 0;
+                            std::vector<unsigned int> index_selected;
+                            for (int iterations = 0; iterations < 10000; iterations++) {
+                                unsigned int index = rng.DrawNumber(0, gene->getUniquefeatures().size() - 1);
+                                if (std::find(index_selected.begin(), index_selected.end(), index) == index_selected.end()) {
+                                    auto coordItr = gene->getUniquefeatures().begin();
+                                    std::advance(coordItr, index);
+                                    SPtrFeatureNGS f = *coordItr;
+                                    if (f->getLength() > len && f->getType() == "intron") {
+                                        index_selected.push_back(index);
+                                        int readNumber = f->getLength() * rng.DrawNumber(1, 2);
+                                        for (int j = readNumber * 1000; j != 0; j--) {
+                                            unsigned int min = f->getStart() - 7;
+                                            unsigned int max = f->getEnd() + 8 - len;
+                                            unsigned int start_pos = rng.DrawNumber(min, max);
+                                            if (start_pos + len < d->getLength()) {
+                                                DNA read = d->newSegment(start_pos, len);
+                                                if (read.getSeq().find('N') == std::string::npos && read.getSeq().find('n') == std::string::npos) {
+                                                    readNumber--;
+                                                    outputFile2 << ">" << read.getId() << ":" << start_pos << "-" << (start_pos + len - 1) << endl;
+                                                    for (unsigned int i = 0; i < read.getLength(); i += 50) {
+                                                        char t = 0;
+                                                        if (i + 50 < read.getLength()) {
+                                                            t = read.getSeq()[i + 50];
+                                                            read.getSeq()[i + 50] = 0;
+                                                        }
+                                                        outputFile2 << (read.getSeq().c_str() + i) << endl;
+                                                        if (i + 50 < read.getLength()) {
+                                                            read.getSeq()[i + 50] = t;
+                                                        }
+                                                    }
+                                                    if (readNumber == 0) {
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        k++;
+                                        if (k == intronNumber || index_selected.size() == gene->getUniquefeatures().size()) {
+                                            outputFile02 << chromosome->getId() << "\t" << gene->getId() << endl;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            ii++;
+                        }
+                    }
+                }
+            } catch (exceptions::NotFoundException ex) {
+                cout << ex.what() << endl;
+            }
+        }
+
+    }
+    outputFile01.close();
+    outputFile02.close();
+    outputFile1.close();
+    outputFile2.close();
+}

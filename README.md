@@ -3,46 +3,36 @@ TPMCalculator
 
 This program calculates the TPM values for the exons and introns. It also 
 compile a set of files per samples with the raw counts, TPM for exons and 
-introns individually and for the whole transcript.    
+introns individually for the gene and transcripts.    
 
-The program parses RNA-Seq aligned reads (BAM files) in a directory and uses 
-a GTF file to allocate the reads into the genomic features. Once all reads for
-a BAM file are allocated the program compute the TPM value for the exons, 
-introns and for the union of the exons (transcript) and the union of the 
-introns (intronic region). 
+This program parse a GTF file and create a list of genes overlapping the exon 
+regions among the transcripts and creating pure intronic regions. After this, 
+the genes are compared with the other in order to overlap exons and introns. 
+The final construction include exonic regions and pure intronic regions for 
+each gene.
 
-Further analysis is executed to compute the mean of the TPM values between two
-conditions. The program includes two option -c (control group) and 
--t (treated group) that are the prefix pattern used to identify the control 
-and treated groups from the BAM file names. 
-
-For example, let's suppose that the conditions prefix patterns are NBC for 
-control samples and CLL for treated samples. 
-
-The BAM files can be named as:
-
-    NBC_1072821_accepted_hits.sorted.bam
-    NBC_1072822_accepted_hits.sorted.bam
-    CLL_1072723_accepted_hits.sorted.bam
-    CLL_1072724_accepted_hits.sorted.bam
-
-The program will calculate a CLL_exon TPM and CLL_intron TPM from the mean of 
-all CLL exon and intron TPM values respectively. It will do the same with the 
-NBC samples.   
+After that, the program parses RNA-Seq aligned reads (BAM files) in a directory 
+or a single file allocating the reads into the genomic features for the before 
+created genes and transcripts.
+ 
+Once all reads for a BAM file are allocated the program compute the TPM value 
+for the exons, introns and for the union of the exons (gene and transcript) and 
+the union of the introns (intronic region for genes and transcripts). 
 
 ## Output files
 
-### Output file: .out
-This file is created per sample and includes the TPM values at transcript level. 
+### Output file: _[gene|transcript].out
+This file is created per sample and includes the TPM values at gene or 
+transcript level. 
 
 The columns are:
 
 1. Gene_Id
-2. Transcript_Id
+2. Transcript_Id (Not present in the gene file)
 3. Chr
 4. Length (Transcript length)
-5. Count_Reads (Reads assigned to the transcript)
-6. TPM (TPM value for transcript)
+5. Count_Reads (Reads assigned to the gene or transcript)
+6. TPM (TPM value for the gene or transcript)
 7. Exon_Length (Sum of all exonic regions)
 8. Exon_Count_Reads (All reads assigned to the exonic regions)
 9. Exon_TPM (TPM for all the exonic regions)
@@ -50,13 +40,14 @@ The columns are:
 11. Intron_Count_Reads (All reads assigned to the intronic regions)
 12. Intron_TPM (TPM for all the intronic regions)
 
-### Output file: .ent
-This file is per sample and includes the TPM values for each exon and intron.
+### Output file: _[gene|transcript].ent
+This file is per sample and includes the TPM values for each exon and intron
+at gene or transcript level.
  
 The columns are:
 
 1. Gene_Id
-2. Transcript_Id
+2. Transcript_Id (Not present in the gene file)
 3. Chr
 4. Type ( feature type: exon or intron)
 5. Type_Number (consecutive number starting from 1)
@@ -66,51 +57,19 @@ The columns are:
 9. Count_Reads (reads assigned to the feature)
 10. TPM (TPM calculated for the feature)
 
-### Output file: transcript_all_per_sample.txt
-This file include the TPM values for exonic region and intronic region 
-calculated for each transcript for each sample. 
+### Output file: [genes|transcripts]_data_per_samples.txt
+This file is created when multiple BAM files are processed from a directory.
+It includes the TPM values for exonic region and intronic region 
+calculated for each gene or transcript for each sample. 
 
 The columns are (using the same names than before):
 
 1. Gene_Id
-2. Transcript_Id
-3. NBC_1072821_accepted_hits.sorted_exon
-4. NBC_1072821_accepted_hits.sorted_intron
-5. NBC_1072822_accepted_hits.sorted_exon
-6. NBC_1072822_accepted_hits.sorted_intron
-7. CLL_1072723_accepted_hits.sorted_exon
-8. CLL_1072723_accepted_hits.sorted_intron
-9. CLL_1072724_accepted_hits.sorted_exon
-10. CLL_1072724_accepted_hits.sorted_intron
-
-### Output file: transcript_count_per_samples.txt
-This file include the raw count values for the whole transcript (exonic regions
-only) calculated for each transcript for each sample. 
-
-The columns are (using the same names than before):
-
-1. Gene_Id
-2. Transcript_Id
-5. NBC_1072821_accepted_hits.sorted
-6. NBC_1072822_accepted_hits.sorted
-7. CLL_1072723_accepted_hits.sorted
-8. CLL_1072724_accepted_hits.sorted
-
-### Output file: intron_count_per_samples.txt
-This file include the raw count values for the introns calculated for each 
-transcript for each sample. 
-
-The columns are (using the same names than before):
-
-1. Gene_Id
-2. Transcript_Id
-3. Intron_Number (consecutive number starting from 1)
-4. Intron_Id (transcript id concatenated with intron number. 
-   Transcript id: NR_028057, Intorn 1 Id: NR_028057_1)
-5. NBC_1072821_accepted_hits.sorted
-6. NBC_1072822_accepted_hits.sorted
-7. CLL_1072723_accepted_hits.sorted
-8. CLL_1072724_accepted_hits.sorted
+2. Transcript_Id (Not present in the gene file)
+3. sample1_exon
+4. sample1_intron
+5. sample2_exon
+6. sample2_intron
 
 ## Requirements
 
@@ -143,7 +102,7 @@ A bin folder will be created with the TPMCalculator executable.
 
 ## Usage
 
-Usage: ./bin/TPMCalculator -g GTF_file -d BAM_files_directory -c NBC -t CLL
+Usage: ./bin/TPMCalculator -g GTF_file [-d BAM_files_directory|-i BAM_file] 
 
     ./bin/TPMCalculator options:
 
@@ -151,8 +110,11 @@ Usage: ./bin/TPMCalculator -g GTF_file -d BAM_files_directory -c NBC -t CLL
     -h    Display this usage information.
     -g    GTF file
     -d    Directory with the BAM files
-    -c    Control identification string. This is a string pattern in the control BAM file names
-    -t    Treated identification string. This is a string pattern in the treated BAM file names
+    -b    BAM file
+    -k    Gene key to use from GTF file. Default: gene_id
+    -t    Transcript key to use from GTF file. Default: transcript_id
+    -c    Smaller size allowed for an intron created for genes. Default: 16. We recommend to use the reads length
+    -p    Use only properly paired reads. Default: No. Recommended for paired-end reads.
 
 ## Credits
 

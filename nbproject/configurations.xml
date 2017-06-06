@@ -8,6 +8,7 @@
       <itemPath>includes/FastaFactory.h</itemPath>
       <itemPath>includes/GenomeFactory.h</itemPath>
       <itemPath>includes/Global.h</itemPath>
+      <itemPath>includes/RandomFactory.h</itemPath>
       <itemPath>includes/ReadFactory.h</itemPath>
       <itemPath>includes/Sequence.h</itemPath>
       <itemPath>includes/TextParser.h</itemPath>
@@ -22,6 +23,7 @@
                    displayName="Source Files"
                    projectFiles="true">
       <itemPath>src/FastaFactory.cpp</itemPath>
+      <itemPath>src/RandomFactory.cpp</itemPath>
       <itemPath>src/ReadFactory.cpp</itemPath>
       <itemPath>src/TextParser.cpp</itemPath>
       <itemPath>src/bstring.cpp</itemPath>
@@ -56,9 +58,6 @@
       <compileType>
         <cTool>
           <developmentMode>5</developmentMode>
-          <incDir>
-            <pElem>../../bamtools/include</pElem>
-          </incDir>
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
@@ -85,6 +84,7 @@
             <pElem>.</pElem>
             <pElem>.</pElem>
             <pElem>.</pElem>
+            <pElem>.</pElem>
           </linkerDynSerch>
           <commandLine>-lbamtools -lm</commandLine>
         </linkerTool>
@@ -103,6 +103,8 @@
       </item>
       <item path="includes/Global.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="includes/RandomFactory.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="includes/ReadFactory.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="includes/Sequence.h" ex="false" tool="3" flavor2="0">
@@ -114,6 +116,8 @@
       <item path="includes/bstring.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="src/FastaFactory.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/RandomFactory.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="src/ReadFactory.cpp" ex="false" tool="1" flavor2="0">
       </item>

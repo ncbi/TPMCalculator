@@ -206,16 +206,21 @@ namespace ngs {
             return samples;
         }
 
-        int processBAMSAMFromDir(std::string dirName, std::vector<std::string> groupFeatures);
-        int processReadsFromBAM(std::string bamFileName, std::string sampleName);
+        int processBAMSAMFromDir(std::string dirName, bool onlyProperlyPaired);
+        int processReadsFromBAM(std::string bamFileName, std::string sampleName, bool onlyProperlyPaired);
         int processReadsFromIsoformBAM(std::string bamFileName, std::string sample);
-        int processReadsFromSAM(std::string samFileName, std::string sampleName);
         std::vector<BamTools::CigarOp> processCigar(std::string cigar);
-        void printResults(std::vector<std::string> groupFeatures);
+        void printResults(bool singleFile);
 
         void processReadAtGenomeLevel(std::string chrName, std::string sampleName, unsigned int start, unsigned int end);
+        void processReadAtGenomeLevelUnique(std::string chrName, std::string sampleName, unsigned int start, unsigned int end);
         void processReadAtGeneLevel(SPtrGeneNGS gene, std::string sampleName, unsigned int start, unsigned int end);
+        void processReadAtGeneLevelUnique(SPtrGeneNGS gene, std::string sampleName, unsigned int start, unsigned int end);
         void processReadAtIsoformLevel(SPtrIsoformNGS isoform, std::string sampleName, unsigned int start, unsigned int end);
+
+        void createSIMSingleReadsIR(std::string outFileName,
+                sequence::DNAContainer seqContainer,
+                unsigned int numberFeat, unsigned int intronNumber, unsigned int len);
     private:
         BamTools::BamReader reader;
         BamTools::SamHeader header;
