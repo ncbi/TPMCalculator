@@ -10,6 +10,8 @@
 
 #include <unordered_map>
 #include <set>
+#include <vector>
+#include <string>
 
 #include "TextParser.h"
 #include "bstring.h"
@@ -123,7 +125,7 @@ namespace genome {
 
         friend std::ostream& operator<<(std::ostream& os, Feature *obj) {
             os << obj->getType() << " " << obj->getStrand();
-            os << " coord: " << obj->getStart() << "-" << obj->getEnd();
+            os << " coord: " << obj->getStart() << "-" << obj->getEnd() << "\tlength: " << obj->getLength();
             return os;
         }
 
@@ -234,6 +236,15 @@ namespace genome {
             f->setStrand(words[6][0]);
             insertFeature(f);
         }
+
+        friend std::ostream& operator<<(std::ostream& os, std::shared_ptr<Isoform<T>> obj) {
+            os << obj->getId() << " Length: " << obj->getLength() << " " << obj->getStart() << "-" << obj->getEnd() << " Features: " << obj->getFeatures().size() << std::endl;
+            for (auto f : obj->getFeatures()) {
+                os << "\t\t\t" << f;
+                os << std::endl;
+            }
+            return os;
+        }
     private:
         std::string id;
         std::unordered_map<std::string, std::string> fields;
@@ -265,6 +276,7 @@ namespace genome {
 
         Gene(std::string id, unsigned int start, unsigned int end) : Feature<T>("gene", start, end), id(id) {
             this->currentIsoform = nullptr;
+            this->length = 0;
         }
 
         virtual ~Gene() {
@@ -272,6 +284,14 @@ namespace genome {
 
         std::string getId() const {
             return id;
+        }
+
+        unsigned int getLength() const {
+            return this->length;
+        }
+
+        void setLength(unsigned int length) {
+            this->length = length;
         }
 
         SPtrIsoform<T> getCurrentIsoform() const {
@@ -290,6 +310,10 @@ namespace genome {
 
         IsoformMultiSet<T>& getIsoforms() {
             return isoforms;
+        }
+
+        void setIsoforms(IsoformMultiSet<T> isoforms) {
+            this->isoforms = isoforms;
         }
 
         std::set<SPtrFeature<T>, typename Isoform<T>::FeatureComp>& getUniquefeatures() {
@@ -313,32 +337,8 @@ namespace genome {
             return it;
         }
 
-        /**
-         * Process an array of words coming from a single line of a GTF file format
-         * @param words vector of strings
-         * @param isoformName name of the isoform
-         * @param fieldsMap map of attributes created from a single line of a GTF file (words[9] splited by '"; ')
-         */
-        void processGTFLine(std::vector<std::string> &words, std::string isoformName, std::unordered_map<std::string, std::string>& fieldsMap) {
-            IsoformUnMapItr<T> it;
-
-            try {
-                setCurrentIsoform(isoformName);
-            } catch (exceptions::NotFoundException ex) {
-                std::pair < IsoformUnMapItr<T>, bool> res = isoformsNameIndex.insert(std::make_pair(isoformName, std::make_shared<Isoform < T >> (isoformName, atoi(words[3].c_str()), atoi(words[4].c_str()))));
-                if (!res.second) {
-                    std::cerr << "Error inserting isoform" << std::endl;
-                    exit(-1);
-                }
-                currentIsoform = res.first->second;
-                currentIsoform->setStrand(words[6][0]);
-            }
-            currentIsoform->processGTFLine(words);
-            currentIsoform->setFields(fieldsMap);
-        }
-
-        void createUniqueIsoformFeatures(int intronCutOff) {
-            //std::cout << "createUniqueIsoformFeatures - START" << std::endl;
+        void createUniqueIsoformFeatures(unsigned int intronCutOff) {
+            //            std::cout << "createUniqueIsoformFeatures - START" << std::endl;
             for (IsoformMultiSetItr<T> iIt = isoforms.begin(); iIt != isoforms.end(); ++iIt) {
                 SPtrIsoform<T> isoform = *iIt;
                 for (FeatureSetItr<T> fIt = isoform->getFeatures().begin(); fIt != isoform->getFeatures().end(); ++fIt) {
@@ -349,22 +349,22 @@ namespace genome {
                         if (iIt != iIt2) {
                             for (FeatureSetItr<T> fIt2 = (*iIt2)->getFeatures().begin(); fIt2 != (*iIt2)->getFeatures().end(); ++fIt2) {
                                 if (feature->getType() == "exon" && (*fIt2)->getType() == "exon") {
-                                    if ((*fIt2)->getStart() <= seg.first && (*fIt2)->getEnd() > seg.first && (*fIt2)->getEnd() <= seg.second) {
-                                        seg.first = (*fIt2)->getStart();
-                                    }
-                                    if ((*fIt2)->getStart() > seg.first && (*fIt2)->getStart() < seg.second && (*fIt2)->getEnd() >= seg.second) {
-                                        seg.second = (*fIt2)->getEnd();
+                                    if (((*fIt2)->getEnd() > seg.first && (*fIt2)->getEnd() <= seg.second) ||
+                                            ((*fIt2)->getStart() >= seg.first && (*fIt2)->getStart() < seg.second) ||
+                                            ((*fIt2)->getStart() < seg.first && (*fIt2)->getEnd() > seg.second)) {
+                                        seg.first = std::min(seg.first, (*fIt2)->getStart());
+                                        seg.second = std::max(seg.second, (*fIt2)->getEnd());
                                     }
                                 }
                                 if (feature->getType() == "intron" && (*fIt2)->getType() == "exon") {
                                     if ((*fIt2)->getStart() <= seg.first && (*fIt2)->getEnd() > seg.first && (*fIt2)->getEnd() < seg.second) {
-                                        seg.first = (*fIt2)->getEnd();
+                                        seg.first = (*fIt2)->getEnd() + 1;
                                     } else if ((*fIt2)->getStart() > seg.first && (*fIt2)->getStart() < seg.second && (*fIt2)->getEnd() >= seg.second) {
-                                        seg.second = (*fIt2)->getStart();
+                                        seg.second = (*fIt2)->getStart() - 1;
                                     } else if ((*fIt2)->getStart() > seg.first && (*fIt2)->getStart() < seg.second && (*fIt2)->getEnd() < seg.second) {
-                                        seg.second = (*fIt2)->getStart();
+                                        seg.second = (*fIt2)->getStart() - 1;
                                         segments.insert(seg);
-                                        seg.first = (*fIt2)->getEnd();
+                                        seg.first = (*fIt2)->getEnd() + 1;
                                         seg.second = feature->getEnd();
                                     } else if ((*fIt2)->getStart() <= seg.first && (*fIt2)->getEnd() >= seg.second) {
                                         seg.first = 0;
@@ -378,8 +378,24 @@ namespace genome {
                     if (seg.first != feature->getStart() || seg.second != feature->getEnd() || !segments.empty()) {
                         if (!segments.empty()) {
                             for (auto it = segments.begin(); it != segments.end(); ++it) {
-                                if ((it->second - it->first + 1) > intronCutOff) {
-                                    SPtrFeature<T> f = std::make_shared<Feature < T >> ("intron", it->first, it->second);
+                                std::pair<unsigned int, unsigned int> seg_in = std::make_pair(it->first, it->second);
+                                for (IsoformMultiSetItr<T> iIt2 = isoforms.begin(); iIt2 != isoforms.end(); ++iIt2) {
+                                    for (FeatureSetItr<T> fIt2 = (*iIt2)->getFeatures().begin(); fIt2 != (*iIt2)->getFeatures().end(); ++fIt2) {
+                                        if ((*fIt2)->getType() == "exon") {
+                                            if ((*fIt2)->getStart() <= seg_in.first && (*fIt2)->getEnd() > seg_in.first && (*fIt2)->getEnd() < seg_in.second) {
+                                                seg_in.first = (*fIt2)->getEnd() + 1;
+                                            } else if ((*fIt2)->getStart() > seg_in.first && (*fIt2)->getStart() < seg_in.second && (*fIt2)->getEnd() >= seg_in.second) {
+                                                seg_in.second = (*fIt2)->getStart() - 1;
+                                            } else if ((*fIt2)->getStart() <= seg_in.first && (*fIt2)->getEnd() >= seg_in.second) {
+                                                seg_in.first = 0;
+                                                seg_in.second = 0;
+                                            }
+                                        }
+                                        if ((*fIt2)->getStart() > seg_in.second || (seg_in.first == 0 && seg_in.second == 0)) break;
+                                    }
+                                }
+                                if (seg_in.first != 0 && seg_in.second != 0 && (seg_in.second - seg_in.first + 1) > intronCutOff) {
+                                    SPtrFeature<T> f = std::make_shared<Feature < T >> ("intron", seg_in.first, seg_in.second);
                                     f->setStrand(this->getStrand());
                                     uniquefeatures.insert(f);
                                 }
@@ -413,11 +429,36 @@ namespace genome {
                     }
                 }
             }
-            //std::cout << "createUniqueIsoformFeatures - END" << std::endl;
+
+            for (FeatureSetItr<T> fIt = this->uniquefeatures.begin(); fIt != this->uniquefeatures.end();) {
+                SPtrFeature<T> feature = *fIt;
+                std::pair<unsigned int, unsigned int> seg = std::make_pair(feature->getStart(), feature->getEnd());
+                for (FeatureSetItr<T> fIt2 = this->uniquefeatures.begin(); fIt2 != this->uniquefeatures.end(); ++fIt2) {
+                    if (fIt2 != fIt) {
+                        if (((*fIt2)->getEnd() > seg.first && (*fIt2)->getEnd() <= seg.second) ||
+                                ((*fIt2)->getStart() >= seg.first && (*fIt2)->getStart() < seg.second) ||
+                                ((*fIt2)->getStart() < seg.first && (*fIt2)->getEnd() > seg.second)) {
+                            seg.first = std::min(seg.first, (*fIt2)->getStart());
+                            seg.second = std::max(seg.second, (*fIt2)->getEnd());
+                        }
+                    }
+                }
+                if (seg.first != feature->getStart() || seg.second != feature->getEnd()) {
+                    fIt = this->uniquefeatures.erase(fIt);
+                    SPtrFeature<T> f = std::make_shared<Feature < T >> (feature->getType(), seg.first, seg.second);
+                    f->setStrand(this->getStrand());
+                    this->uniquefeatures.insert(f);
+                } else {
+                    ++fIt;
+                }
+            }
+            for (FeatureSetItr<T> fIt = this->uniquefeatures.begin(); fIt != this->uniquefeatures.end(); ++fIt) {
+                if ((*fIt)->getType() == "exon") length += (*fIt)->getLength();
+            }
         }
 
-        void createUniqueIntronFeatures(std::shared_ptr<Gene<T>> gene, int intronCutOff) {
-            //std::cout << "createUniqueIntronFeatures - START" << std::endl;
+        void createUniqueIntronFeatures(std::shared_ptr<Gene<T>> gene, unsigned int intronCutOff) {
+            //            std::cout << "createUniqueIntronFeatures - START" << std::endl;
             for (FeatureSetItr<T> fIt = uniquefeatures.begin(); fIt != uniquefeatures.end();) {
                 SPtrFeature<T> feature = *fIt;
                 if (feature->getType() == "intron") {
@@ -426,13 +467,13 @@ namespace genome {
                     for (FeatureSetItr<T> fIt2 = gene->getUniquefeatures().begin(); fIt2 != gene->getUniquefeatures().end(); ++fIt2) {
                         if ((*fIt2)->getType() == "exon") {
                             if ((*fIt2)->getStart() <= seg.first && (*fIt2)->getEnd() > seg.first && (*fIt2)->getEnd() < seg.second) {
-                                seg.first = (*fIt2)->getEnd();
-                            } else if ((*fIt2)->getStart() > seg.first && (*fIt2)->getStart() < seg.second && (*fIt2)->getEnd() >= seg.second) {
-                                seg.second = (*fIt2)->getStart();
+                                seg.first = (*fIt2)->getEnd() + 1;
+                            } else if ((*fIt2)->getStart() >= seg.first && (*fIt2)->getStart() < seg.second && (*fIt2)->getEnd() >= seg.second) {
+                                seg.second = (*fIt2)->getStart() - 1;
                             } else if ((*fIt2)->getStart() > seg.first && (*fIt2)->getStart() < seg.second && (*fIt2)->getEnd() < seg.second) {
-                                seg.second = (*fIt2)->getStart();
+                                seg.second = (*fIt2)->getStart() - 1;
                                 segments.insert(seg);
-                                seg.first = (*fIt2)->getEnd();
+                                seg.first = (*fIt2)->getEnd() + 1;
                                 seg.second = feature->getEnd();
                             } else if ((*fIt2)->getStart() <= seg.first && (*fIt2)->getEnd() >= seg.second) {
                                 seg.first = 0;
@@ -445,8 +486,22 @@ namespace genome {
                         if (!segments.empty()) {
                             fIt = uniquefeatures.erase(fIt);
                             for (auto it = segments.begin(); it != segments.end(); ++it) {
-                                if ((it->second - it->first + 1) > intronCutOff) {
-                                    SPtrFeature<T> f = std::make_shared<Feature < T >> ("intron", it->first, it->second);
+                                std::pair<unsigned int, unsigned int> seg_in = std::make_pair(it->first, it->second);
+                                for (FeatureSetItr<T> fIt2 = gene->getUniquefeatures().begin(); fIt2 != gene->getUniquefeatures().end(); ++fIt2) {
+                                    if ((*fIt2)->getType() == "exon") {
+                                        if ((*fIt2)->getStart() <= seg_in.first && (*fIt2)->getEnd() > seg_in.first && (*fIt2)->getEnd() < seg_in.second) {
+                                            seg_in.first = (*fIt2)->getEnd() + 1;
+                                        } else if ((*fIt2)->getStart() >= seg_in.first && (*fIt2)->getStart() < seg_in.second && (*fIt2)->getEnd() >= seg_in.second) {
+                                            seg_in.second = (*fIt2)->getStart() - 1;
+                                        } else if ((*fIt2)->getStart() <= seg_in.first && (*fIt2)->getEnd() >= seg_in.second) {
+                                            seg_in.first = 0;
+                                            seg_in.second = 0;
+                                        }
+                                        if ((*fIt2)->getStart() > seg_in.second || (seg_in.first == 0 && seg_in.second == 0)) break;
+                                    }
+                                }
+                                if (seg_in.first != 0 && seg_in.second != 0 && (seg_in.second - seg_in.first + 1) > intronCutOff) {
+                                    SPtrFeature<T> f = std::make_shared<Feature < T >> ("intron", seg_in.first, seg_in.second);
                                     f->setStrand(this->getStrand());
                                     uniquefeatures.insert(f);
                                 }
@@ -479,7 +534,6 @@ namespace genome {
                     ++fIt;
                 }
             }
-            //std::cout << "createUniqueIntronFeatures - END" << std::endl;
         }
 
         void printGeneUniqueIsoformFeaturesGTF(std::ofstream& gtfFile, std::string chr, bool include_introns) {
@@ -500,8 +554,27 @@ namespace genome {
                 }
             }
         }
+
+        friend std::ostream& operator<<(std::ostream& os, std::shared_ptr<Gene<T>> obj) {
+            os << obj->getId() << " Length: " << obj->getLength() << " " << obj->getStart() << "-" << obj->getEnd();
+            os << " Isoforms: " << obj->getIsoforms().size();
+            os << " Unique: " << obj->getUniquefeatures().size();
+            os << std::endl;
+            os << "\t\tIsoforms: " << std::endl;
+            for (auto i : obj->getIsoforms()) {
+                os << "\t\t" << i;
+                os << std::endl;
+            }
+            os << "\t\tUnique: " << std::endl;
+            for (auto i : obj->getUniquefeatures()) {
+                os << "\t\t" << i;
+                os << std::endl;
+            }
+            return os;
+        }
     private:
         std::string id;
+        unsigned int length;
         IsoformMultiSet<T> isoforms;
         IsoformUnMap<T> isoformsNameIndex;
         SPtrIsoform<T> currentIsoform;
@@ -524,11 +597,21 @@ namespace genome {
     using GeneMultiSetItr = typename GeneMultiSet<T>::iterator;
 
     template<typename T>
+    using GeneIsoformReadUnMap = typename std::unordered_map<std::string, std::shared_ptr<IsoformUnMap<T>>>;
+
+    template<typename T>
+    using GeneIsoformUnMap = std::unordered_map<std::string, std::pair<SPtrGene<T>, SPtrIsoform<T>>>;
+
+    template<typename T>
+    using GeneIsoformUnMapItr = typename GeneIsoformUnMap<T>::iterator;
+
+    template<typename T>
     class Chromosome {
     public:
 
         Chromosome(std::string id) : id(id) {
             this->currentGene = nullptr;
+            this->currentIsoform = nullptr;
         }
 
         virtual~Chromosome() {
@@ -548,6 +631,10 @@ namespace genome {
 
         SPtrGene<T> getCurrentGene() const {
             return currentGene;
+        }
+
+        GeneIsoformReadUnMap<T> &getGeneIsoforms() {
+            return geneIsoforms;
         }
 
         void setCurrentGene(std::string geneName) {
@@ -580,13 +667,13 @@ namespace genome {
                 GeneMultiSetItr<T> overlapUp = genes.end();
                 for (auto it = gIt; it != genes.begin(); --it) {
                     if (it != gIt) {
-                        if ((*it)->getEnd() < g->getStart()) break;
+                        if (std::distance(it, gIt) > 6 && (*it)->getEnd() < g->getStart()) break;
                         overlapDown = it;
                     }
                 }
                 for (auto it = gIt; it != genes.end(); ++it) {
                     if (it != gIt) {
-                        if (g->getEnd() < (*it)->getStart()) break;
+                        if (std::distance(gIt, it) > 6 && g->getEnd() < (*it)->getStart()) break;
                         overlapUp = it;
                     }
                 }
@@ -612,6 +699,97 @@ namespace genome {
             }
         }
 
+        void createGeneMultiSetItr(int intronCutOff, std::unordered_map<std::string, std::string>& featuresToCreate, GeneIsoformUnMap<T> transcript2Chr) {
+            genes.clear();
+            for (auto gIt : geneIsoforms) {
+                std::string geneName = gIt.first;
+                std::shared_ptr<IsoformUnMap < T>> iMap = gIt.second;
+                if (iMap->size() == 1) {
+                    SPtrIsoform<T> i = iMap->begin()->second;
+                    for (auto feat : featuresToCreate) {
+                        i->insertFeaturesInGaps(feat.first, feat.second);
+                    }
+                    currentGene = std::make_shared<Gene < T >> (geneName, i->getStart(), i->getEnd());
+                    currentGene->setStrand(i->getStrand());
+                    currentGene->setLength(i->getLength());
+                    currentGene->getIsoforms().insert(i);
+
+                    for (auto fIt : i->getFeatures()) {
+                        currentGene->getUniquefeatures().insert(fIt);
+                    }
+
+                    std::pair < GeneUnMapItr<T>, bool> res = genesNameIndex.insert(make_pair(geneName, currentGene));
+                    if (!res.second) {
+                        std::cerr << "Error inserting gene with single transcript" << std::endl;
+                        exit(-1);
+                    }
+                    transcript2Chr.insert(make_pair(i->getId(), std::make_pair(currentGene, i)));
+                    genes.insert(currentGene);
+                } else {
+                    std::map < std::pair<unsigned int, unsigned int>, IsoformMultiSet < T>> segments;
+                    for (auto iIt : *(iMap)) {
+                        std::string isoformName = iIt.first;
+                        SPtrIsoform<T> i = iIt.second;
+                        for (auto feat : featuresToCreate) {
+                            i->insertFeaturesInGaps(feat.first, feat.second);
+                        }
+                        if (segments.empty()) {
+                            IsoformMultiSet<T> iSet;
+                            iSet.insert(i);
+                            segments.insert(std::make_pair(std::make_pair(i->getStart(), i->getEnd()), iSet));
+                        } else {
+                            bool inserted = false;
+                            for (auto sIt = segments.begin(); sIt != segments.end(); ++sIt) {
+                                std::pair<unsigned int, unsigned int> seg = sIt->first;
+                                IsoformMultiSet<T> iSet = sIt->second;
+                                if ((i->getEnd() > seg.first && i->getEnd() <= seg.second) ||
+                                        (i->getStart() >= seg.first && i->getStart() < seg.second) ||
+                                        (i->getStart() < seg.first && i->getEnd() > seg.second)) {
+                                    iSet.insert(i);
+                                    seg.first = std::min(seg.first, i->getStart());
+                                    seg.second = std::max(seg.second, i->getEnd());
+                                    inserted = true;
+                                    segments.erase(sIt);
+                                    segments.insert(std::make_pair(seg, iSet));
+                                    break;
+                                }
+                            }
+                            if (!inserted) {
+                                IsoformMultiSet<T> iSet;
+                                iSet.insert(i);
+                                segments.insert(std::make_pair(std::make_pair(i->getStart(), i->getEnd()), iSet));
+                            }
+                        }
+                    }
+                    int gene_copy = 1;
+                    for (auto s : segments) {
+                        std::pair<unsigned int, unsigned int> seg = s.first;
+                        IsoformMultiSet<T> iSet = s.second;
+                        std::string geneNamewithCopy = geneName;
+                        if (segments.size() > 1) geneNamewithCopy += "#" + std::to_string(gene_copy);
+                        gene_copy++;
+                        currentGene = std::make_shared<Gene < T >> (geneNamewithCopy, seg.first, seg.second);
+                        currentGene->setIsoforms(iSet);
+                        SPtrIsoform<T> i = *(iSet.begin());
+                        currentGene->setStrand(i->getStrand());
+                        currentGene->createUniqueIsoformFeatures(intronCutOff);
+                        std::pair < GeneUnMapItr<T>, bool> res = genesNameIndex.insert(make_pair(geneNamewithCopy, currentGene));
+                        if (!res.second) {
+                            std::cerr << "Error inserting gene from segments" << std::endl;
+                            exit(-1);
+                        }
+                        for (auto iIt : iSet) {
+                            i = iIt;
+                            transcript2Chr.insert(make_pair(i->getId(), std::make_pair(currentGene, i)));
+                        }
+                        genes.insert(currentGene);
+                    }
+                }
+            }
+            geneIsoforms.clear();
+            this->createUniqueIntronsPerGene(intronCutOff);
+        }
+
         /**
          * Process an array of words coming from a single line of a GTF file format
          * @param words vector of strings
@@ -622,9 +800,9 @@ namespace genome {
             std::vector<std::string> fields;
             std::string geneName;
             std::string isoformName;
-            unsigned int wStart, wEnd;
             std::unordered_map<std::string, std::string> fieldsMap;
             GeneUnMapItr<T> it;
+            int wStart, wEnd;
 
             wStart = atoi(words[3].c_str()) - 1;
             wEnd = atoi(words[4].c_str()) - 1;
@@ -653,31 +831,63 @@ namespace genome {
             if (isoformName.empty()) {
                 throw exceptions::NotFoundException("Key " + isoformName + " for isoform name was not found on GTF line.");
             }
-            try {
-                setCurrentGene(geneName);
-            } catch (exceptions::NotFoundException ex) {
-                std::pair < GeneUnMapItr<T>, bool> res = genesNameIndex.insert(make_pair(geneName, std::make_shared<Gene < T >> (geneName, wStart, wEnd)));
-                if (!res.second) {
-                    std::cerr << "Error inserting gene" << std::endl;
-                    exit(-1);
+            if (geneName.find("-AS") == std::string::npos) {
+                auto gItr = geneIsoforms.find(geneName);
+                if (gItr == geneIsoforms.end()) {
+                    std::shared_ptr<IsoformUnMap < T>> iMap = std::make_shared<IsoformUnMap < T >> ();
+                    currentIsoform = std::make_shared<Isoform < T >> (isoformName, wStart, wEnd);
+                    currentIsoform->setStrand(words[6][0]);
+                    currentIsoform->processGTFLine(words);
+                    currentIsoform->setFields(fieldsMap);
+                    std::pair < IsoformUnMapItr<T>, bool> res = iMap->insert(std::make_pair(isoformName, currentIsoform));
+                    if (!res.second) {
+                        std::cerr << "Error inserting isoform" << std::endl;
+                        exit(-1);
+                    }
+                    geneIsoforms.insert(std::make_pair(geneName, iMap));
+                } else {
+                    std::shared_ptr<IsoformUnMap < T>> iMap = gItr->second;
+                    try {
+                        if (!currentIsoform || currentIsoform->getId().compare(isoformName) != 0) {
+                            IsoformUnMapItr<T> it;
+                            it = iMap->find(isoformName);
+                            if (it == iMap->end()) {
+                                throw exceptions::NotFoundException("Isoform with name: " + isoformName + " does not exist");
+                            }
+                            currentIsoform = it->second;
+                        }
+                    } catch (exceptions::NotFoundException ex) {
+                        currentIsoform = std::make_shared<Isoform < T >> (isoformName, wStart, wEnd);
+                        std::pair < IsoformUnMapItr<T>, bool> res = iMap->insert(std::make_pair(isoformName, currentIsoform));
+                        if (!res.second) {
+                            std::cerr << "Error inserting isoform" << std::endl;
+                            exit(-1);
+                        }
+                        currentIsoform = res.first->second;
+                        currentIsoform->setStrand(words[6][0]);
+                    }
+                    currentIsoform->processGTFLine(words);
+                    currentIsoform->setFields(fieldsMap);
                 }
-                currentGene = res.first->second;
-                currentGene->setStrand(words[6][0]);
             }
-            if (currentGene->getStart() > wStart) {
-                currentGene->setStart(wStart);
-            }
-            if (currentGene->getEnd() < wEnd) {
-
-                currentGene->setEnd(wEnd);
-            }
-            currentGene->processGTFLine(words, isoformName, fieldsMap);
         }
+
+        friend std::ostream& operator<<(std::ostream& os, std::shared_ptr<Chromosome<T>> obj) {
+            os << obj->getId() << " Genes: " << obj->getGenes().size() << std::endl;
+            for (auto g : obj->getGenes()) {
+                os << "\t" << g;
+                os << std::endl;
+            }
+            return os;
+        }
+
     private:
         std::string id;
         GeneMultiSet<T> genes;
         GeneUnMap<T> genesNameIndex;
         SPtrGene<T> currentGene;
+        GeneIsoformReadUnMap<T> geneIsoforms;
+        SPtrIsoform<T> currentIsoform;
     };
 
     template<typename T>
@@ -688,12 +898,6 @@ namespace genome {
 
     template<typename T>
     using ChromosomeUnMapItr = typename ChromosomeUnMap<T>::iterator;
-
-    template<typename T>
-    using GeneIsoformUnMap = std::unordered_map<std::string, std::pair<SPtrGene<T>, SPtrIsoform<T>>>;
-
-    template<typename T>
-    using GeneIsoformUnMapItr = typename GeneIsoformUnMap<T>::iterator;
 
     template<typename T>
     class GenomeFactory {
@@ -741,7 +945,6 @@ namespace genome {
 
         void setCurrentChr(std::string chrName) {
             if (!currentChr || currentChr->getId().compare(chrName) != 0) {
-
                 this->currentChr = findChromosome(chrName);
             }
         }
@@ -750,7 +953,6 @@ namespace genome {
             ChromosomeUnMapItr<T> it;
             it = chromosomes.find(chrName);
             if (it == chromosomes.end()) {
-
                 throw exceptions::NotFoundException("Chromosome with name: " + chrName + " does not exist");
             }
             return it->second.get();
@@ -811,6 +1013,7 @@ namespace genome {
             SPtrChromosome<T> c;
             SPtrGene<T> g;
             SPtrIsoform<T> i;
+            SPtrFeature<T> f;
 
             try {
                 parsers::TextParser fParser;
@@ -843,23 +1046,9 @@ namespace genome {
                 std::cerr << "Error parsing file: " << gtfFileName << std::endl;
                 exit(-1);
             }
-
             for (auto it = chromosomes.begin(); it != chromosomes.end(); ++it) {
                 c = it->second;
-                for (auto it1 = c->getGenesNameIndex().begin(); it1 != c->getGenesNameIndex().end(); ++it1) {
-                    g = it1->second;
-                    for (auto it2 = g->getIsoformsNameIndex().begin(); it2 != g->getIsoformsNameIndex().end(); ++it2) {
-                        i = it2->second;
-                        for (auto it3 = featuresToCreate.begin(); it3 != featuresToCreate.end(); ++it3) {
-                            i->insertFeaturesInGaps(it3->first, it3->second);
-                        }
-                        transcript2Chr.insert(make_pair(i->getId(), std::make_pair(g, i)));
-                        g->getIsoforms().insert(i);
-                    }
-                    g->createUniqueIsoformFeatures(intronCutOff);
-                    c->getGenes().insert(g);
-                }
-                c->createUniqueIntronsPerGene(intronCutOff);
+                c->createGeneMultiSetItr(intronCutOff, featuresToCreate, transcript2Chr);
             }
         }
     private:

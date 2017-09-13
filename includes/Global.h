@@ -49,5 +49,14 @@ public:
         return s_instance;
     }
 };
+
+class Log {
+public:
+
+    static void PrintCerrMessage(std::string message) {
+        std::cerr << message << std::endl;
+    }
+
+};
 #endif /* GLOBAL_H */
 

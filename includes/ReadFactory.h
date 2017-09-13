@@ -217,6 +217,8 @@ namespace ngs {
         void processReadAtGeneLevel(SPtrGeneNGS gene, std::string sampleName, unsigned int start, unsigned int end);
         void processReadAtGeneLevelUnique(SPtrGeneNGS gene, std::string sampleName, unsigned int start, unsigned int end);
         void processReadAtIsoformLevel(SPtrIsoformNGS isoform, std::string sampleName, unsigned int start, unsigned int end);
+        
+        void loadTPMCalculatorGenesOutput(std::string dirName);
 
         void createSIMSingleReadsIR(std::string outFileName,
                 sequence::DNAContainer seqContainer,

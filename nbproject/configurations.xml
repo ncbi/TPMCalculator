@@ -4,6 +4,7 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>includes/DiffExpIR.h</itemPath>
       <itemPath>includes/Exceptions.h</itemPath>
       <itemPath>includes/FastaFactory.h</itemPath>
       <itemPath>includes/GenomeFactory.h</itemPath>
@@ -11,8 +12,10 @@
       <itemPath>includes/RandomFactory.h</itemPath>
       <itemPath>includes/ReadFactory.h</itemPath>
       <itemPath>includes/Sequence.h</itemPath>
+      <itemPath>includes/Stats.h</itemPath>
       <itemPath>includes/TextParser.h</itemPath>
       <itemPath>includes/TimeUtils.h</itemPath>
+      <itemPath>includes/bmath.h</itemPath>
       <itemPath>includes/bstring.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
@@ -22,12 +25,33 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <itemPath>src/DiffExpIR.cpp</itemPath>
       <itemPath>src/FastaFactory.cpp</itemPath>
       <itemPath>src/RandomFactory.cpp</itemPath>
       <itemPath>src/ReadFactory.cpp</itemPath>
+      <itemPath>src/Stats.cpp</itemPath>
       <itemPath>src/TextParser.cpp</itemPath>
+      <itemPath>src/bd0.c</itemPath>
+      <itemPath>src/bratio.c</itemPath>
       <itemPath>src/bstring.cpp</itemPath>
+      <itemPath>src/chebyshev.c</itemPath>
+      <itemPath>src/choose.c</itemPath>
+      <itemPath>src/dnorm.c</itemPath>
+      <itemPath>src/dt.c</itemPath>
+      <itemPath>src/gamma.c</itemPath>
+      <itemPath>src/lbeta.c</itemPath>
+      <itemPath>src/lgamma.c</itemPath>
+      <itemPath>src/lgammacor.c</itemPath>
       <itemPath>src/main.cpp</itemPath>
+      <itemPath>src/pbeta.c</itemPath>
+      <itemPath>src/phyper.c</itemPath>
+      <itemPath>src/pnorm.c</itemPath>
+      <itemPath>src/pt.c</itemPath>
+      <itemPath>src/qnorm.c</itemPath>
+      <itemPath>src/qt.c</itemPath>
+      <itemPath>src/stirlerr.c</itemPath>
+      <itemPath>src/sunif.c</itemPath>
+      <itemPath>src/wilcox.c</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -58,6 +82,10 @@
       <compileType>
         <cTool>
           <developmentMode>5</developmentMode>
+          <standard>3</standard>
+          <incDir>
+            <pElem>includes</pElem>
+          </incDir>
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
@@ -95,6 +123,8 @@
       </item>
       <item path="README.md" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="includes/DiffExpIR.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="includes/Exceptions.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="includes/FastaFactory.h" ex="false" tool="3" flavor2="0">
@@ -109,11 +139,17 @@
       </item>
       <item path="includes/Sequence.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="includes/Stats.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="includes/TextParser.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="includes/TimeUtils.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="includes/bmath.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="includes/bstring.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/DiffExpIR.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="src/FastaFactory.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -121,11 +157,51 @@
       </item>
       <item path="src/ReadFactory.cpp" ex="false" tool="1" flavor2="0">
       </item>
+      <item path="src/Stats.cpp" ex="false" tool="1" flavor2="0">
+      </item>
       <item path="src/TextParser.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/bd0.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/bratio.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/bstring.cpp" ex="false" tool="1" flavor2="0">
       </item>
+      <item path="src/chebyshev.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/choose.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/dnorm.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/dt.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/gamma.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/lbeta.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/lgamma.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/lgammacor.c" ex="false" tool="0" flavor2="0">
+      </item>
       <item path="src/main.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/pbeta.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/phyper.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/pnorm.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/pt.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/qnorm.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/qt.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/stirlerr.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/sunif.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/wilcox.c" ex="false" tool="0" flavor2="0">
       </item>
     </conf>
   </confs>

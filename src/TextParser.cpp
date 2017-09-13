@@ -50,18 +50,23 @@ bool TextParser::iterate(std::string dontStartWith) {
         throw exceptions::FileHandledException("Can't do an iteration in a NULL file");
     }
     if (currPosition == std::string::npos) return false;
+    line.clear();
     while (1) {
         if (currPosition == 0) fileToParse.read(&buffer[0], bufferSize);
         size_t pos = buffer.find_first_of("\n", currPosition);
-        if (pos != std::string::npos && pos <= static_cast<size_t>(fileToParse.gcount())) {
+//        cout << "Pos: " << pos << " size: " << static_cast<size_t> (fileToParse.gcount()) << endl;
+        if (pos != std::string::npos && pos < static_cast<size_t> (fileToParse.gcount())) {
             if (backup) line += buffer.substr(currPosition, pos - currPosition);
             else line = buffer.substr(currPosition, pos - currPosition);
             backup = false;
             currPosition = pos + 1;
-            if (!lineStartWith(dontStartWith)) return true;
+            if (!lineStartWith(dontStartWith)) {
+//                cout << "LINE: [" << line << "]" << endl;
+                return true;
+            }
         } else {
             if (!backup) {
-                line.erase();
+                line.clear();
                 backup = true;
             }
             line += buffer.substr(currPosition, fileToParse.gcount() - currPosition);

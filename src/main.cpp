@@ -161,7 +161,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (gtfFileName.empty()) {
-        cerr << "\nGTF file is required. See -g option" << endl;
+        cerr << "\nGTF is required. See -g option" << endl;
         print_usage(argv[0], -1);
     }
 
@@ -196,7 +196,7 @@ int main(int argc, char *argv[]) {
             if (fileName.substr(dot, fileName.size() - dot) == ".bam") {
                 uTime.setTime();
                 cerr << "Parsing sample: " << sampleName;
-                fflush(NULL);                
+                fflush(NULL);
                 readFactory.getSamples().push_back(sampleName);
                 count = readFactory.processReadsFromBAM(bamFileName, sampleName, onlyProperlyPaired);
                 cerr << " " << count << " reads processed in " << uTime.getElapseTimeSec() << " seconds" << endl;

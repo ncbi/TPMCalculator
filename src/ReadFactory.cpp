@@ -50,7 +50,7 @@ void ReadFactory::processReadAtGenomeLevel(std::string chrName, std::string samp
         for (auto it = geneIt;; --it) {
             this->processReadAtGeneLevel(*it, sampleName, start, end);
             if (done) break;
-            if ((*it)->getEnd() < start) done = true;
+            if (std::distance(it, geneIt) > 6 && (*it)->getEnd() < start) done = true;
             if (it == genomeFactory.getCurrentChr()->getGenes().begin()) break;
         }
     } catch (exceptions::NotFoundException) {
@@ -65,7 +65,7 @@ void ReadFactory::processReadAtGenomeLevelUnique(std::string chrName, std::strin
         for (auto it = geneIt;; --it) {
             this->processReadAtGeneLevelUnique(*it, sampleName, start, end);
             if (done) break;
-            if ((*it)->getEnd() < start) done = true;
+            if (std::distance(it, geneIt) > 6 && (*it)->getEnd() < start) done = true;
             if (it == genomeFactory.getCurrentChr()->getGenes().begin()) break;
         }
     } catch (exceptions::NotFoundException) {
@@ -132,6 +132,19 @@ void ReadFactory::PopulateReads(std::string sampleName) {
                     }
                 } catch (exceptions::NotFoundException) {
                 }
+            } else {
+                g->setProcessed(true);
+                try {
+                    SPtrSampleData s = g->getData().createSampleData(sampleName);
+                    for (auto fIt = g->getUniquefeatures().begin(); fIt != g->getUniquefeatures().end(); ++fIt) {
+                        f = *fIt;
+                        try {
+                            SPtrSampleData sf = f->getData().createSampleData(sampleName);
+                        } catch (exceptions::NotFoundException) {
+                        }
+                    }
+                } catch (exceptions::NotFoundException) {
+                }
             }
         }
     }
@@ -144,10 +157,8 @@ void ReadFactory::calculateTPMperSample(std::string sampleName) {
     SPtrFeatureNGS f;
     double TGene = 0.0;
     double TIsoform = 0.0;
-    double TGeneExon = 0.0;
-    double TGeneIntron = 0.0;
-    double TIsoformExon = 0.0;
-    double TIsoformIntron = 0.0;
+    double TGeneFeature = 0.0;
+    double TIsoformFeature = 0.0;
     double TBridges = 0.0;
 
 
@@ -164,7 +175,7 @@ void ReadFactory::calculateTPMperSample(std::string sampleName) {
                         f = *fIt;
                         try {
                             SPtrSampleData sf = f->getData().getSampleData(sampleName);
-
+                            TGeneFeature += static_cast<double> (sf->getReads()) / static_cast<double> (f->getLength());
                             if (f->getType().compare("exon") == 0) {
                                 s->increaseExonReads(sf->getReads());
                                 s->increaseExonLength(f->getLength());
@@ -174,12 +185,6 @@ void ReadFactory::calculateTPMperSample(std::string sampleName) {
                             }
                         } catch (exceptions::NotFoundException) {
                         }
-                    }
-                    if (s->getExonLength() > 0) {
-                        TGeneExon += static_cast<double> (s->getExonReads()) / static_cast<double> (s->getExonLength());
-                    }
-                    if (s->getIntronLength() > 0) {
-                        TGeneIntron += static_cast<double> (s->getIntronReads()) / static_cast<double> (s->getIntronLength());
                     }
                 } catch (exceptions::NotFoundException) {
                 }
@@ -199,7 +204,7 @@ void ReadFactory::calculateTPMperSample(std::string sampleName) {
                                 f = *fIt;
                                 try {
                                     SPtrSampleData sf = f->getData().createSampleData(sampleName);
-
+                                    TIsoformFeature += static_cast<double> (sf->getReads()) / static_cast<double> (f->getLength());
                                     if (f->getType().compare("exon") == 0) {
                                         s->increaseExonReads(sf->getReads());
                                         s->increaseExonLength(f->getLength());
@@ -209,12 +214,6 @@ void ReadFactory::calculateTPMperSample(std::string sampleName) {
                                     }
                                 } catch (exceptions::NotFoundException) {
                                 }
-                            }
-                            if (s->getExonLength() > 0) {
-                                TIsoformExon += static_cast<double> (s->getExonReads()) / static_cast<double> (s->getExonLength());
-                            }
-                            if (s->getIntronLength() > 0) {
-                                TIsoformIntron += static_cast<double> (s->getIntronReads()) / static_cast<double> (s->getIntronLength());
                             }
                         } catch (exceptions::NotFoundException) {
                         }
@@ -235,21 +234,17 @@ void ReadFactory::calculateTPMperSample(std::string sampleName) {
                     s->setTPM(static_cast<double> (s->getReads() * 1.0E6) / static_cast<double> (i->getLength() * TGene));
 
                     if (s->getExonLength() != 0) {
-                        s->setTPMExon(static_cast<double> (s->getExonReads() * 1.0E6) / static_cast<double> (s->getExonLength() * TGeneExon));
+                        s->setTPMExon(static_cast<double> (s->getExonReads() * 1.0E6) / static_cast<double> (s->getExonLength() * TGeneFeature));
                     }
                     if (s->getIntronLength() != 0) {
-                        s->setTPMIntron(static_cast<double> (s->getIntronReads() * 1.0E6) / static_cast<double> (s->getIntronLength() * TGeneIntron));
+                        s->setTPMIntron(static_cast<double> (s->getIntronReads() * 1.0E6) / static_cast<double> (s->getIntronLength() * TGeneFeature));
                     }
 
                     for (auto fIt = g->getUniquefeatures().begin(); fIt != g->getUniquefeatures().end(); ++fIt) {
                         f = *fIt;
                         try {
                             SPtrSampleData sf = f->getData().getSampleData(sampleName);
-                            if (f->getType().compare("exon") == 0) {
-                                sf->setTPM(static_cast<double> (sf->getReads() * 1.0E6) / static_cast<double> (f->getLength() * TGeneExon));
-                            } else if (f->getType().compare("intron") == 0) {
-                                sf->setTPM(static_cast<double> (sf->getReads() * 1.0E6) / static_cast<double> (f->getLength() * TGeneIntron));
-                            }
+                            sf->setTPM(static_cast<double> (sf->getReads() * 1.0E6) / static_cast<double> (f->getLength() * TGeneFeature));
                         } catch (exceptions::NotFoundException) {
                         }
                     }
@@ -268,21 +263,16 @@ void ReadFactory::calculateTPMperSample(std::string sampleName) {
                             }
 
                             if (s->getExonLength() != 0) {
-                                s->setTPMExon(static_cast<double> (s->getExonReads() * 1.0E6) / static_cast<double> (s->getExonLength() * TIsoformExon));
+                                s->setTPMExon(static_cast<double> (s->getExonReads() * 1.0E6) / static_cast<double> (s->getExonLength() * TIsoformFeature));
                             }
                             if (s->getIntronLength() != 0) {
-                                s->setTPMIntron(static_cast<double> (s->getIntronReads() * 1.0E6) / static_cast<double> (s->getIntronLength() * TIsoformIntron));
+                                s->setTPMIntron(static_cast<double> (s->getIntronReads() * 1.0E6) / static_cast<double> (s->getIntronLength() * TIsoformFeature));
                             }
                             for (auto fIt = i->getFeatures().begin(); fIt != i->getFeatures().end(); ++fIt) {
                                 f = *fIt;
                                 try {
                                     SPtrSampleData sf = f->getData().createSampleData(sampleName);
-
-                                    if (f->getType().compare("exon") == 0) {
-                                        sf->setTPM(static_cast<double> (sf->getReads() * 1.0E6) / static_cast<double> (f->getLength() * TIsoformExon));
-                                    } else if (f->getType().compare("intron") == 0) {
-                                        sf->setTPM(static_cast<double> (sf->getReads() * 1.0E6) / static_cast<double> (f->getLength() * TIsoformIntron));
-                                    }
+                                    sf->setTPM(static_cast<double> (sf->getReads() * 1.0E6) / static_cast<double> (f->getLength() * TIsoformFeature));
                                 } catch (exceptions::NotFoundException) {
                                 }
                             }
@@ -312,6 +302,7 @@ int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sample
         if (al.IsMapped()) toRun = true;
         if (toRun && onlyProperlyPaired && !al.IsProperPair()) toRun = false;
         if (toRun) {
+            string chr = references[al.RefID].RefName;
             start = end = al.Position;
             toRun = false;
             for (auto it = al.CigarData.begin(); it != al.CigarData.end(); ++it) {
@@ -329,8 +320,8 @@ int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sample
                     len += c.Length;
                     if (c.Type == 'N') {
                         if (len >= 8) {
-                            processReadAtGenomeLevel(references[al.RefID].RefName, sampleName, start, end);
-                            processReadAtGenomeLevelUnique(references[al.RefID].RefName, sampleName, start, end);
+                            processReadAtGenomeLevel(chr, sampleName, start, end);
+                            processReadAtGenomeLevelUnique(chr, sampleName, start, end);
                         }
                         start = end + 1 + c.Length;
                         len = 0;
@@ -339,12 +330,12 @@ int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sample
                     }
                 }
                 if (len >= 8) {
-                    processReadAtGenomeLevel(references[al.RefID].RefName, sampleName, start, end);
-                    processReadAtGenomeLevelUnique(references[al.RefID].RefName, sampleName, start, end);
+                    processReadAtGenomeLevel(chr, sampleName, start, end);
+                    processReadAtGenomeLevelUnique(chr, sampleName, start, end);
                 }
             } else {
-                processReadAtGenomeLevel(references[al.RefID].RefName, sampleName, al.Position, al.GetEndPosition(true, true));
-                processReadAtGenomeLevelUnique(references[al.RefID].RefName, sampleName, al.Position, al.GetEndPosition(true, true));
+                processReadAtGenomeLevel(chr, sampleName, al.Position, al.GetEndPosition(true, true));
+                processReadAtGenomeLevelUnique(chr, sampleName, al.Position, al.GetEndPosition(true, true));
             }
             count++;
         }
@@ -874,4 +865,124 @@ void ReadFactory::createSIMSingleReadsIR(std::string outFileName, sequence::DNAC
     outputFile02.close();
     outputFile1.close();
     outputFile2.close();
+}
+
+void ReadFactory::loadTPMCalculatorGenesOutput(std::string dirName) {
+    int count = 0;
+    struct dirent *dp;
+    string GENESentsufix("_genes.ent");
+    string GENESoutsufix("_genes.out");
+    TimeUtils uTime;
+    string sampleFileName;
+    SPtrGeneNGS g;
+
+    DIR *dirp = (DIR *) opendir(dirName.c_str());
+    if (!dirp) {
+        cerr << "Can't open directory: " << dirName << endl;
+        exit(-1);
+    }
+
+    while ((dp = readdir(dirp)) != NULL) {
+        string fName(dp->d_name);
+        if (fName[0] != '.' && fName.size() >= 10) {
+            if (fName.compare(fName.size() - GENESentsufix.size(), GENESentsufix.size(), GENESentsufix) == 0) {
+                string fileName = dirName + "/" + fName;
+                sampleFileName = fName;
+                sampleFileName.replace(fName.size() - GENESentsufix.size(), GENESentsufix.size(), "");
+                uTime.setTime();
+                cerr << "Processing sample ent file: " << sampleFileName;
+                samples.push_back(sampleFileName);
+                cerr.flush();
+                try {
+                    parsers::TextParser fParser;
+                    fParser.setFileToParse(fileName);
+                    while (fParser.iterate("#", "\t")) {
+                        if (fParser.getWords().size() != 9) {
+                            std::cout << "\nGenes TPM ent output file with wrong number of fields. It should be 9 tab separated fields" << std::endl;
+                            std::cout << "Words size: " << fParser.getWords().size() << std::endl;
+                            std::cout << "Line size: " << fParser.getLine().size() << std::endl;
+                            std::cout << fParser.getLine() << std::endl;
+                            exit(-1);
+                        }
+                        if (fParser.getWords()[0] != "Gene_Id") {
+                            try {
+                                g = genomeFactory.findGene(fParser.getWords()[1], fParser.getWords()[0]);
+                                SPtrSampleData s = g->getData().createSampleData(sampleFileName);
+                                g->setProcessed(true);
+                                int uNumber = atoi(fParser.getWords()[3].c_str()) - 1;
+                                int uIndex = 0;
+                                SPtrFeatureNGS f;
+                                for (auto fIt : g->getUniquefeatures()) {
+                                    if (uIndex == uNumber) {
+                                        f = fIt;
+                                        break;
+                                    }
+                                    uIndex++;
+                                }
+                                if (f) {
+                                    //                                SPtrFeature<ReadData> f = *std::next(g->getUniquefeatures().begin(), atoi(fParser.getWords()[3].c_str()) - 1);
+                                    SPtrSampleData sf = f->getData().createSampleData(sampleFileName);
+                                    sf->increaseReads(atoi(fParser.getWords()[7].c_str()));
+                                    sf->setTPM(atof(fParser.getWords()[8].c_str()));
+                                } else {
+                                    std::cerr << "Feature not inserted" << std::endl;
+                                    exit(-1);
+                                }
+                            } catch (exceptions::NotFoundException ex) {
+                                std::cerr << "Chromosome: " << fParser.getWords()[1] << " not include in the GTF" << std::endl;
+                                exit(-1);
+                            }
+                        }
+                    }
+                } catch (exceptions::FileHandledException ex) {
+                    std::cerr << "Error parsing file: " << fileName << std::endl;
+                    exit(-1);
+                }
+                cerr << " in " << uTime.getElapseTimeSec() << " seconds." << endl;
+            }
+        }
+        if (fName[0] != '.' && fName.size() >= 10) {
+            if (fName.compare(fName.size() - GENESoutsufix.size(), GENESoutsufix.size(), GENESoutsufix) == 0) {
+                string fileName = dirName + "/" + fName;
+                sampleFileName = fName;
+                sampleFileName.replace(fName.size() - GENESoutsufix.size(), GENESoutsufix.size(), "");
+                uTime.setTime();
+                cerr << "Processing sample out file: " << sampleFileName;
+                cerr.flush();
+                try {
+                    parsers::TextParser fParser;
+                    fParser.setFileToParse(fileName);
+                    while (fParser.iterate("#", "\t")) {
+                        if (fParser.getWords().size() != 11) {
+                            std::cerr << "Genes TPM out output file with wrong number of fields. It should be 11 tab separated fields" << std::endl;
+                            exit(-1);
+                        }
+                        if (fParser.getWords()[0] != "Gene_Id") {
+                            try {
+                                g = genomeFactory.findGene(fParser.getWords()[1], fParser.getWords()[0]);
+                                SPtrSampleData s = g->getData().createSampleData(sampleFileName);
+                                g->setProcessed(true);
+                                s->increaseReads(atoi(fParser.getWords()[3].c_str()));
+                                s->setTPM(atof(fParser.getWords()[4].c_str()));
+                                s->increaseExonLength(atoi(fParser.getWords()[5].c_str()));
+                                s->increaseExonReads(atoi(fParser.getWords()[6].c_str()));
+                                s->setTPMExon(atof(fParser.getWords()[7].c_str()));
+                                s->increaseIntronLength(atoi(fParser.getWords()[8].c_str()));
+                                s->increaseIntronReads(atoi(fParser.getWords()[9].c_str()));
+                                s->setTPMIntron(atof(fParser.getWords()[10].c_str()));
+                            } catch (exceptions::NotFoundException ex) {
+                                std::cerr << "Chromosome: " << fParser.getWords()[1] << " not include in the GTF" << std::endl;
+                                exit(-1);
+                            }
+                        }
+                    }
+                } catch (exceptions::FileHandledException ex) {
+                    std::cerr << "Error parsing file: " << fileName << std::endl;
+                    exit(-1);
+                }
+                cerr << " in " << uTime.getElapseTimeSec() << " seconds." << endl;
+            }
+        }
+    }
+    closedir(dirp);
 }
