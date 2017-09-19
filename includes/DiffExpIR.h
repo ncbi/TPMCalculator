@@ -81,7 +81,7 @@ namespace ngs {
         virtual ~DiffExpIR() {
         }
 
-        void calculateDiffExpIR(ReadFactory& readFactory, std::vector<std::string> samples, std::string method);
+        void calculateDiffExpIR(ReadFactory& readFactory, std::vector<std::string> samples, std::string method, bool useFDR);
 
         void printDiffExpIR(std::string output_name, double fc_cutoff, double pvalue_cutoff, double r_cutoff);
 

@@ -39,7 +39,7 @@ using namespace std;
 using namespace ngs;
 using namespace genome;
 
-void DiffExpIR::calculateDiffExpIR(ReadFactory& readFactory, std::vector<std::string> samples, std::string method) {
+void DiffExpIR::calculateDiffExpIR(ReadFactory& readFactory, std::vector<std::string> samples, std::string method, bool useFDR) {
     stats::WilcoxTest wTest;
     stats::TTest ttest;
     stats::FDRCorrection fdrCorrection;
@@ -127,15 +127,17 @@ void DiffExpIR::calculateDiffExpIR(ReadFactory& readFactory, std::vector<std::st
                         double r1 = std::log2(x_sum / (e11_TPM + e12_TPM));
                         double r2 = std::log2(y_sum / (e21_TPM + e22_TPM));
                         double p;
-                        if (method == "ttest") {
-                            p = ttest.pvalue(x, y);
-                        } else {
-                            p = wTest.pvalue(x, y);
-                        }
-                        if (!std::isnan(p)) {
-                            pvalue.push_back(p);
-                            SptrDiffExpIntron d = std::make_shared<DiffExpIntron>(DiffExpIntron(make_pair(r1, r2), g, f, c->getId(), p, std::log2(x_sum / y_sum), x_sum, y_sum));
-                            diffexpIRdata.push_back(d);
+                        if (x.size() != 0 && y.size() != 0) {
+                            if (method == "ttest") {
+                                p = ttest.pvalue(x, y);
+                            } else {
+                                p = wTest.pvalue(x, y);
+                            }
+                            if (!std::isnan(p)) {
+                                pvalue.push_back(p);
+                                SptrDiffExpIntron d = std::make_shared<DiffExpIntron>(DiffExpIntron(make_pair(r1, r2), g, f, c->getId(), p, std::log2(x_sum / y_sum), x_sum, y_sum));
+                                diffexpIRdata.push_back(d);
+                            }
                         }
                     }
                 }
@@ -143,26 +145,29 @@ void DiffExpIR::calculateDiffExpIR(ReadFactory& readFactory, std::vector<std::st
         }
     }
 
-    pvalue = fdrCorrection.fdr_correction(pvalue);
+    if (useFDR)
+        pvalue = fdrCorrection.fdr_correction(pvalue);
 }
 
 void DiffExpIR::printDiffExpIR(std::string output_name, double fc_cutoff, double pvalue_cutoff, double r_cutoff) {
     ofstream out_file;
 
     out_file.open(output_name);
-    out_file << "GeneId\tChr\tStart\tEnd\tIntron_Start\tIntron_End\tLog2TPMRatio\tTPM_1\tTPM_2\tminusLog10PValue\tPValue\tRValue_1\tR_Value_2" << endl;
+    out_file << "GeneId\tChr\tStart\tEnd\tIntron_Start\tIntron_End\tLog2TPMRatio\tTPM_1\tTPM_2\tminusLog10PValue\tPValue\tRValue_1\tRValue_2" << endl;
     for (unsigned int ind = 0; ind != pvalue.size(); ind++) {
         SptrDiffExpIntron d = diffexpIRdata[ind];
 
-        if (d->getRvalueFirst() >= r_cutoff || d->getRvalueSecond() >= r_cutoff) {
-            if (pvalue[ind] <= pvalue_cutoff && std::fabs(d->getLog2TPMRatio()) >= fc_cutoff) {
-                double minusLog10PValue = -1.0 * std::log10(pvalue[ind]);
-                SPtrGeneNGS g = d->getGene();
-                SPtrFeatureNGS f = d->getIntron();
-                out_file << g->getId() << "\t" << d->getChr() << "\t" << g->getStart() << "\t" << g->getEnd() << "\t";
-                out_file << f->getStart() << "\t" << f->getEnd() << "\t";
-                out_file << d->getLog2TPMRatio() << "\t" << d->getTPM_1() << "\t" << d->getTPM_2() << "\t";
-                out_file << minusLog10PValue << "\t" << pvalue[ind] << "\t" << d->getRvalueFirst() << "\t" << d->getRvalueSecond() << endl;
+        if (std::isfinite(d->getRvalueFirst()) && std::isfinite(d->getRvalueSecond())) {
+            if (d->getRvalueFirst() >= r_cutoff || d->getRvalueSecond() >= r_cutoff) {
+                if (pvalue[ind] <= pvalue_cutoff && std::fabs(d->getLog2TPMRatio()) >= fc_cutoff) {
+                    double minusLog10PValue = -1.0 * std::log10(pvalue[ind]);
+                    SPtrGeneNGS g = d->getGene();
+                    SPtrFeatureNGS f = d->getIntron();
+                    out_file << g->getId() << "\t" << d->getChr() << "\t" << (g->getStart() + 1) << "\t" << (g->getEnd() + 1) << "\t";
+                    out_file << (f->getStart() + 1) << "\t" << (f->getEnd() + 1) << "\t";
+                    out_file << d->getLog2TPMRatio() << "\t" << d->getTPM_1() << "\t" << d->getTPM_2() << "\t";
+                    out_file << minusLog10PValue << "\t" << pvalue[ind] << "\t" << d->getRvalueFirst() << "\t" << d->getRvalueSecond() << endl;
+                }
             }
         }
     }
