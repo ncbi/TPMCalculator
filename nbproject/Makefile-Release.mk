@@ -86,7 +86,7 @@ LDLIBSOPTIONS=
 
 bin/TPMCalculator: ${OBJECTFILES}
 	${MKDIR} -p bin
-	${LINK.cc} -o bin/TPMCalculator ${OBJECTFILES} ${LDLIBSOPTIONS} -lbamtools -lm
+	${LINK.cc} -o bin/TPMCalculator ${OBJECTFILES} ${LDLIBSOPTIONS} -lbamtools -lm -lz
 
 ${OBJECTDIR}/src/DiffExpIR.o: src/DiffExpIR.cpp
 	${MKDIR} -p ${OBJECTDIR}/src
