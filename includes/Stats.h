@@ -25,7 +25,7 @@ namespace stats {
         virtual ~WilcoxTest() {
         }
 
-        double pvalue(std::vector<double> &x, std::vector<double> &y);
+        double pvalue(std::vector<double> &x_in, std::vector<double> &y_in);
     private:
 
     };

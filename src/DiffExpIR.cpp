@@ -50,16 +50,25 @@ void DiffExpIR::calculateDiffExpIR(ReadFactory& readFactory, std::vector<std::st
 
     for (auto cIt : readFactory.getGenomeFactory().getChromosomes()) {
         c = cIt.second;
+//        cout << "Chromosome: " << c->getId() << endl;
         for (auto it : c->getGenes()) {
             g = it;
+//            cout << "Gene: " << g->getId();
+//            fflush(NULL);
             if (g->isProcessed()) {
+//                cout << "\tProcessed" << endl;
+//                fflush(NULL);
                 double e11_TPM, e12_TPM, e21_TPM, e22_TPM;
                 int e1_count, e2_count;
                 e11_TPM = e21_TPM = 0.0;
                 e12_TPM = e22_TPM = 0.0;
                 e1_count = e2_count = 0;
+//                cout << "\tUniquefeatures: " << g->getUniquefeatures().size() << endl;
+//                fflush(NULL);
                 for (auto fIt = g->getUniquefeatures().begin(); fIt != g->getUniquefeatures().end(); ++fIt) {
                     f = *fIt;
+//                    cout << "\t\tFeature: " << f << endl;
+//                    fflush(NULL);
                     if (f->getType() == "exon") {
                         e11_TPM = e21_TPM = 0.0;
                         e1_count = e2_count = 0;
@@ -127,13 +136,14 @@ void DiffExpIR::calculateDiffExpIR(ReadFactory& readFactory, std::vector<std::st
                         double r1 = std::log2(x_sum / (e11_TPM + e12_TPM));
                         double r2 = std::log2(y_sum / (e21_TPM + e22_TPM));
                         double p;
-                        if (x.size() != 0 && y.size() != 0) {
+                        if (x.size() != 0 && y.size() != 0) {    
                             if (method == "ttest") {
                                 p = ttest.pvalue(x, y);
                             } else {
                                 p = wTest.pvalue(x, y);
                             }
                             if (!std::isnan(p)) {
+//                                cout << "\t\t\tPValue: " << p << " R: " << r1 << " " << r2 << " Mean: " << x_sum << " " << y_sum << " log2: " << std::log2(x_sum / y_sum) << endl;
                                 pvalue.push_back(p);
                                 SptrDiffExpIntron d = std::make_shared<DiffExpIntron>(DiffExpIntron(make_pair(r1, r2), g, f, c->getId(), p, std::log2(x_sum / y_sum), x_sum, y_sum));
                                 diffexpIRdata.push_back(d);
@@ -141,6 +151,9 @@ void DiffExpIR::calculateDiffExpIR(ReadFactory& readFactory, std::vector<std::st
                         }
                     }
                 }
+            } else {
+//                cout << "\tNo processed" << endl;
+                fflush(NULL);
             }
         }
     }

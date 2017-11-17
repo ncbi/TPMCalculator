@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <iostream>
+#include <iterator>
 #include <vector>
 #include <algorithm>
 #include <memory>
@@ -28,25 +29,29 @@
 using namespace std;
 using namespace stats;
 
-vector<double> vector_rank(vector<double> r) {
+vector<double> vector_rank(vector<double>& r) {
     long unsigned int j = 0;
-    vector<int> in;
-    vector<double> rk = r;
+    vector<long unsigned int> in;
+    vector<double> rk(r.begin(), r.end());
+
     std::sort(rk.begin(), rk.end());
     for (auto it = rk.begin(); it != rk.end(); ++it) {
         for (auto it1 = r.begin(); it1 != r.end(); ++it1) {
             if (*it == *it1) {
-                int index = it1 - r.begin();
-                if (std::find(in.begin(), in.end(), index) == in.end())
-                    in.push_back(it1 - r.begin());
+                long unsigned int index = static_cast<long unsigned int> (it1 - r.begin());
+                if (std::find(in.begin(), in.end(), index) == in.end()) {
+                    in.push_back(index);
+                }
             }
         }
     }
     for (long unsigned int i = 0; i < r.size(); i = j + 1) {
         j = i;
-        while ((j < r.size() - 1) && r[in[j]] == r[in[j + 1]]) j++;
-        for (long unsigned int k = i; k <= j; k++)
-            rk[in[k]] = (i + j + 2) / 2.;
+        while ((j < in.size() - 1) && r[in[j]] == r[in[j + 1]]) j++;
+        for (long unsigned int k = i; k <= j; k++) {
+            if (in[k] < rk.size())
+                rk[in[k]] = (i + j + 2) / 2.;
+        }
     }
     return rk;
 }
@@ -99,11 +104,11 @@ double TTest::pvalue(std::vector<double>& x, std::vector<double>& y) {
     Stats stats;
 
     for (auto e : x) {
-        mx += e;
+        if (!std::isnan(e)) mx += e;
     }
     mx = mx / x.size();
     for (auto e : y) {
-        my += e;
+        if (!std::isnan(e)) my += e;
     }
     my = my / y.size();
 
@@ -128,35 +133,50 @@ double TTest::pvalue(std::vector<double>& x, std::vector<double>& y) {
     return pval;
 }
 
-double WilcoxTest::pvalue(std::vector<double>& x, std::vector<double>& y) {
-    if (x.empty() or y.empty()) {
+double WilcoxTest::pvalue(std::vector<double>& x_in, std::vector<double>& y_in) {
+    if (x_in.empty() or y_in.empty()) {
         throw new exceptions::EmptyDatasetException("Your dataset is empty");
     }
+    vector<double> x, y, r;
+    for (auto v : x_in)
+        if (!std::isnan(v)) {
+            x.push_back(v);
+            r.push_back(v);
+        }
+    for (auto v : y_in) {
+        if (!std::isnan(v)) {
+            y.push_back(v);
+            r.push_back(v);
+        }
+    }
+    
+//    cout << "Len(x): " << x.size() << endl;
+//    cout << "Len(y): " << y.size() << endl;
+//    cout << "Len(r): " << r.size() << endl;
+    
     bool exact = (x.size() < 50) && (y.size() < 50);
     double p = NAN;
     double stats = 0.0;
 
-    vector<double> r(x.begin(), x.end());
-    for (auto it = y.begin(); it != y.end(); ++it) {
-        r.push_back(*it);
-    }
-    r = vector_rank(r);
+    r = vector_rank(r);    
     for (long unsigned int i = 0; i < x.size(); i++) stats += r[i];
+//    cout << "stats 1: " << stats << endl;
+    
     stats -= static_cast<double> (x.size()) * (static_cast<double> (x.size()) + 1) / 2;
+//    cout << "stats 2: " << stats << endl;
 
     vector<double> r_unique(r.begin(), r.end());
     std::sort(r_unique.begin(), r_unique.end());
     auto last = std::unique(r_unique.begin(), r_unique.end());
     r_unique.erase(last, r_unique.end());
     bool ties = (r.size() != r_unique.size());
-
-    //    cout << "Len(r): " << r.size() << endl;
-    //    cout << "Len(unique(r)):: " << r_unique.size() << endl;
-    //    cout << "Is exact:: " << exact << endl;
-    //    cout << "TIES: " << ties << endl;
+    
+//    cout << "Len(unique(r)): " << r_unique.size() << endl;
+//    cout << "Is exact: " << exact << endl;
+//    cout << "TIES: " << ties << endl;
+//    fflush(NULL);
 
     if (exact && !ties) {
-        //        printf("exact && !TIES\n");
         if (stats > (static_cast<double> (x.size()) * static_cast<double> (y.size()) / 2.0)) {
             p = pwilcox(stats - 1, static_cast<double> (x.size()), static_cast<double> (y.size()), false, false);
         } else {
@@ -165,20 +185,23 @@ double WilcoxTest::pvalue(std::vector<double>& x, std::vector<double>& y) {
         if (std::isnan(p)) return NAN;
         p = min(2 * p, 1);
     } else {
-        //        printf("!exact && !TIES\n");
         double z = stats - static_cast<double> (x.size()) * static_cast<double> (y.size()) / 2.0;
         double sigma = sqrt((static_cast<double> (x.size()) * static_cast<double> (y.size()) / 12) \
             * ((static_cast<double> (x.size()) + static_cast<double> (y.size()) + 1) - \
             sum_nties(r, r_unique) / ((static_cast<double> (x.size()) + static_cast<double> (y.size())) \
             * (static_cast<double> (x.size()) + static_cast<double> (y.size()) - 1))));
         double correction = sign(z) * 0.5;
-        //        printf("Z: %f\n", z);
-        //        printf("SIGMA: %f\n", sigma);
-        //        printf("CORRECTION: %f\n", correction);
+//        printf("Z: %f\n", z);
+//        printf("SIGMA: %f\n", sigma);
+//        printf("CORRECTION: %f\n", correction);
         z = (z - correction) / sigma;
-        //        printf("Z: %f\n", z);
-        if (std::isnan(z)) return NAN;
+//        printf("Z: %f\n", z);
+        if (std::isnan(z)){
+//            cout << "PValue: NaN" << endl;
+            return NAN;
+        }
         p = 2 * min(pnorm5(z, 0, 1, true, false), pnorm5(z, 0, 1, false, false));
+//        cout << "PValue: " << p << endl;
     }
     return p;
 }
