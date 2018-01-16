@@ -1,7 +1,8 @@
 TPMCalculator
 ===
 
-This program calculates the TPM values for the exons and introns. It also 
+This program calculates the TPM values for the genes, transcripts, exons and introns 
+from NGS RNA-Seq aligned reads (BAM files). It also 
 compile a set of files per samples with the raw counts, TPM for exons and 
 introns individually for the gene and transcripts.    
 
