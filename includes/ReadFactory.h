@@ -20,14 +20,17 @@ namespace ngs {
             this->TPM = 0.0;
             this->uniqueTPM = 0.0;
             this->uniqueTPMIntron = 0.0;
+            this->uniqueReads = 0;
+            this->uniqueLength = 0;
+            this->uniqueReadsIntron = 0;
+            this->uniqueIntronLength = 0;
             this->TPMExon = 0.0;
             this->TPMIntron = 0.0;
             this->exonReads = 0;
             this->exonLength = 0;
             this->intronReads = 0;
             this->intronLength = 0;
-            this->reads = 0;
-            this->uniqueReads = 0;
+            this->reads = 0;            
             this->TPMBridges = 0.0;
             this->bridgeReads = 0;
         }
@@ -36,14 +39,17 @@ namespace ngs {
             this->TPM = 0.0;
             this->uniqueTPM = 0.0;
             this->uniqueTPMIntron = 0.0;
+            this->uniqueReads = 0;
+            this->uniqueLength = 0;
+            this->uniqueReadsIntron = 0;
+            this->uniqueIntronLength = 0;
             this->TPMExon = 0.0;
             this->TPMIntron = 0.0;
             this->exonReads = 0;
             this->exonLength = 0;
             this->intronReads = 0;
             this->intronLength = 0;
-            this->reads = reads;
-            this->uniqueReads = 0;
+            this->reads = reads;            
             this->TPMBridges = 0.0;
             this->bridgeReads = 0;
         }
