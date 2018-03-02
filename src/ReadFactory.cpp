@@ -1007,12 +1007,18 @@ void ReadFactory::loadTPMCalculatorGenesOutput(std::string dirName) {
                                 g->setProcessed(true);
                                 s->increaseReads(atoi(fParser.getWords()[3].c_str()));
                                 s->setTPM(atof(fParser.getWords()[4].c_str()));
-                                s->increaseExonLength(atoi(fParser.getWords()[5].c_str()));
-                                s->increaseExonReads(atoi(fParser.getWords()[6].c_str()));
-                                s->setTPMExon(atof(fParser.getWords()[7].c_str()));
-                                s->increaseIntronLength(atoi(fParser.getWords()[8].c_str()));
-                                s->increaseIntronReads(atoi(fParser.getWords()[9].c_str()));
-                                s->setTPMIntron(atof(fParser.getWords()[10].c_str()));
+                                s->setUniqueLength(atoi(fParser.getWords()[5].c_str()));
+                                s->increaseUniqueReads(atoi(fParser.getWords()[6].c_str()));
+                                s->setUniqueTPM(atof(fParser.getWords()[7].c_str()));
+                                s->setUniqueIntronLength(atoi(fParser.getWords()[8].c_str()));
+                                s->increaseUniqueReadsIntron(atoi(fParser.getWords()[9].c_str()));
+                                s->setUniqueTPMIntron(atof(fParser.getWords()[10].c_str()));
+                                s->increaseExonLength(atoi(fParser.getWords()[11].c_str()));
+                                s->increaseExonReads(atoi(fParser.getWords()[12].c_str()));
+                                s->setTPMExon(atof(fParser.getWords()[13].c_str()));
+                                s->increaseIntronLength(atoi(fParser.getWords()[14].c_str()));
+                                s->increaseIntronReads(atoi(fParser.getWords()[15].c_str()));
+                                s->setTPMIntron(atof(fParser.getWords()[16].c_str()));
                             } catch (exceptions::NotFoundException ex) {
                                 std::cerr << "Chromosome: " << fParser.getWords()[1] << " not include in the GTF" << std::endl;
                                 exit(-1);
