@@ -65,7 +65,7 @@ void DiffExpIR::calculateDiffExpIR(ReadFactory& readFactory, std::vector<std::st
                 e1_count = e2_count = 0;
 //                cout << "\tUniquefeatures: " << g->getUniquefeatures().size() << endl;
 //                fflush(NULL);
-                for (auto fIt = g->getUniquefeatures().begin(); fIt != g->getUniquefeatures().end(); ++fIt) {
+                for (auto fIt = g->getFeatures().begin(); fIt != g->getFeatures().end(); ++fIt) {
                     f = *fIt;
 //                    cout << "\t\tFeature: " << f << endl;
 //                    fflush(NULL);
@@ -109,7 +109,7 @@ void DiffExpIR::calculateDiffExpIR(ReadFactory& readFactory, std::vector<std::st
                             } catch (exceptions::NotFoundException) {
                             }
                         }
-                        for (auto eIt = fIt; eIt != g->getUniquefeatures().end(); ++eIt) {
+                        for (auto eIt = fIt; eIt != g->getFeatures().end(); ++eIt) {
                             if ((*eIt)->getType() == "exon") {
                                 e12_TPM = e22_TPM = 0.0;
                                 e1_count = e2_count = 0;

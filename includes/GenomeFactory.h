@@ -116,7 +116,11 @@ namespace genome {
         }
 
         bool operator>(const Feature& right) const {
-            return this->start > right.getStart();
+            if (this->start != right.getStart())
+                return this->start > right.getStart();
+            else if (this->end != right.getEnd())
+                return this->end > right.getEnd();
+            return false;
         }
 
         bool operator<(const Feature& right) const {
@@ -316,8 +320,12 @@ namespace genome {
             this->isoforms = isoforms;
         }
 
-        std::set<SPtrFeature<T>, typename Isoform<T>::FeatureComp>& getUniquefeatures() {
-            return uniquefeatures;
+        std::set<SPtrFeature<T>, typename Isoform<T>::FeatureComp>& getFeatures() {
+            return features;
+        }
+
+        std::set<SPtrFeature<T>, typename Isoform<T>::FeatureComp>& getUniqueFeatures() {
+            return uniqueFeatures;
         }
 
         SPtrIsoform<T> findIsoform(std::string isoformName) {
@@ -337,8 +345,7 @@ namespace genome {
             return it;
         }
 
-        void createUniqueIsoformFeatures(unsigned int intronCutOff) {
-            //            std::cout << "createUniqueIsoformFeatures - START" << std::endl;
+        void createGeneFeatures(unsigned int intronCutOff) {
             for (IsoformMultiSetItr<T> iIt = isoforms.begin(); iIt != isoforms.end(); ++iIt) {
                 SPtrIsoform<T> isoform = *iIt;
                 for (FeatureSetItr<T> fIt = isoform->getFeatures().begin(); fIt != isoform->getFeatures().end(); ++fIt) {
@@ -397,7 +404,7 @@ namespace genome {
                                 if (seg_in.first != 0 && seg_in.second != 0 && (seg_in.second - seg_in.first + 1) > intronCutOff) {
                                     SPtrFeature<T> f = std::make_shared<Feature < T >> ("intron", seg_in.first, seg_in.second);
                                     f->setStrand(this->getStrand());
-                                    uniquefeatures.insert(f);
+                                    features.insert(f);
                                 }
                             }
                             if (seg.first != 0 && seg.second != 0) {
@@ -406,7 +413,7 @@ namespace genome {
                                 if (add) {
                                     SPtrFeature<T> f = std::make_shared<Feature < T >> (feature->getType(), seg.first, seg.second);
                                     f->setStrand(this->getStrand());
-                                    uniquefeatures.insert(f);
+                                    features.insert(f);
                                 }
                             }
                         } else if (seg.first != 0 && seg.second != 0) {
@@ -415,7 +422,7 @@ namespace genome {
                             if (add) {
                                 SPtrFeature<T> f = std::make_shared<Feature < T >> (feature->getType(), seg.first, seg.second);
                                 f->setStrand(this->getStrand());
-                                uniquefeatures.insert(f);
+                                features.insert(f);
                             }
                         }
                     } else {
@@ -424,16 +431,16 @@ namespace genome {
                         if (add) {
                             SPtrFeature<T> f = std::make_shared<Feature < T >> (feature->getType(), feature->getStart(), feature->getEnd());
                             f->setStrand(this->getStrand());
-                            uniquefeatures.insert(f);
+                            features.insert(f);
                         }
                     }
                 }
             }
 
-            for (FeatureSetItr<T> fIt = this->uniquefeatures.begin(); fIt != this->uniquefeatures.end();) {
+            for (FeatureSetItr<T> fIt = this->features.begin(); fIt != this->features.end();) {
                 SPtrFeature<T> feature = *fIt;
                 std::pair<unsigned int, unsigned int> seg = std::make_pair(feature->getStart(), feature->getEnd());
-                for (FeatureSetItr<T> fIt2 = this->uniquefeatures.begin(); fIt2 != this->uniquefeatures.end(); ++fIt2) {
+                for (FeatureSetItr<T> fIt2 = this->features.begin(); fIt2 != this->features.end(); ++fIt2) {
                     if (fIt2 != fIt) {
                         if (((*fIt2)->getEnd() > seg.first && (*fIt2)->getEnd() <= seg.second) ||
                                 ((*fIt2)->getStart() >= seg.first && (*fIt2)->getStart() < seg.second) ||
@@ -444,27 +451,28 @@ namespace genome {
                     }
                 }
                 if (seg.first != feature->getStart() || seg.second != feature->getEnd()) {
-                    fIt = this->uniquefeatures.erase(fIt);
+                    fIt = this->features.erase(fIt);
                     SPtrFeature<T> f = std::make_shared<Feature < T >> (feature->getType(), seg.first, seg.second);
                     f->setStrand(this->getStrand());
-                    this->uniquefeatures.insert(f);
+                    this->features.insert(f);
                 } else {
                     ++fIt;
                 }
             }
-            for (FeatureSetItr<T> fIt = this->uniquefeatures.begin(); fIt != this->uniquefeatures.end(); ++fIt) {
-                if ((*fIt)->getType() == "exon") length += (*fIt)->getLength();
+            this->length = 0;
+            for (FeatureSetItr<T> fIt = this->features.begin(); fIt != this->features.end(); ++fIt) {
+                if ((*fIt)->getType() == "exon") this->length += (*fIt)->getLength();
             }
         }
 
         void createUniqueIntronFeatures(std::shared_ptr<Gene<T>> gene, unsigned int intronCutOff) {
-            //            std::cout << "createUniqueIntronFeatures - START" << std::endl;
-            for (FeatureSetItr<T> fIt = uniquefeatures.begin(); fIt != uniquefeatures.end();) {
+            std::cout << "createUniqueIntronFeatures - START: " << this->id << " compared with " << gene->getId() << std::endl;
+            for (FeatureSetItr<T> fIt = features.begin(); fIt != features.end();) {
                 SPtrFeature<T> feature = *fIt;
                 if (feature->getType() == "intron") {
                     std::set<std::pair<unsigned int, unsigned int>> segments;
                     std::pair<unsigned int, unsigned int> seg = std::make_pair(feature->getStart(), feature->getEnd());
-                    for (FeatureSetItr<T> fIt2 = gene->getUniquefeatures().begin(); fIt2 != gene->getUniquefeatures().end(); ++fIt2) {
+                    for (FeatureSetItr<T> fIt2 = gene->getFeatures().begin(); fIt2 != gene->getFeatures().end(); ++fIt2) {
                         if ((*fIt2)->getType() == "exon") {
                             if ((*fIt2)->getStart() <= seg.first && (*fIt2)->getEnd() > seg.first && (*fIt2)->getEnd() < seg.second) {
                                 seg.first = (*fIt2)->getEnd() + 1;
@@ -484,10 +492,10 @@ namespace genome {
                     }
                     if (seg.first != feature->getStart() || seg.second != feature->getEnd() || !segments.empty()) {
                         if (!segments.empty()) {
-                            fIt = uniquefeatures.erase(fIt);
+                            fIt = features.erase(fIt);
                             for (auto it = segments.begin(); it != segments.end(); ++it) {
                                 std::pair<unsigned int, unsigned int> seg_in = std::make_pair(it->first, it->second);
-                                for (FeatureSetItr<T> fIt2 = gene->getUniquefeatures().begin(); fIt2 != gene->getUniquefeatures().end(); ++fIt2) {
+                                for (FeatureSetItr<T> fIt2 = gene->getFeatures().begin(); fIt2 != gene->getFeatures().end(); ++fIt2) {
                                     if ((*fIt2)->getType() == "exon") {
                                         if ((*fIt2)->getStart() <= seg_in.first && (*fIt2)->getEnd() > seg_in.first && (*fIt2)->getEnd() < seg_in.second) {
                                             seg_in.first = (*fIt2)->getEnd() + 1;
@@ -503,29 +511,29 @@ namespace genome {
                                 if (seg_in.first != 0 && seg_in.second != 0 && (seg_in.second - seg_in.first + 1) > intronCutOff) {
                                     SPtrFeature<T> f = std::make_shared<Feature < T >> ("intron", seg_in.first, seg_in.second);
                                     f->setStrand(this->getStrand());
-                                    uniquefeatures.insert(f);
+                                    features.insert(f);
                                 }
                             }
                             if (seg.first != 0 && seg.second != 0) {
                                 if ((seg.second - seg.first + 1) > intronCutOff) {
                                     SPtrFeature<T> f = std::make_shared<Feature < T >> ("intron", seg.first, seg.second);
                                     f->setStrand(this->getStrand());
-                                    uniquefeatures.insert(f);
+                                    features.insert(f);
                                 }
                             }
                         } else if (seg.first != 0 && seg.second != 0) {
-                            fIt = uniquefeatures.erase(fIt);
+                            fIt = features.erase(fIt);
                             if ((seg.second - seg.first + 1) > intronCutOff) {
                                 SPtrFeature<T> f = std::make_shared<Feature < T >> ("intron", seg.first, seg.second);
                                 f->setStrand(this->getStrand());
-                                uniquefeatures.insert(f);
+                                features.insert(f);
                             }
                         } else {
-                            fIt = uniquefeatures.erase(fIt);
+                            fIt = features.erase(fIt);
                         }
                     } else {
                         if (feature->getLength() < intronCutOff) {
-                            fIt = uniquefeatures.erase(fIt);
+                            fIt = features.erase(fIt);
                         } else {
                             ++fIt;
                         }
@@ -536,9 +544,28 @@ namespace genome {
             }
         }
 
-        void printGeneUniqueIsoformFeaturesGTF(std::ofstream& gtfFile, std::string chr, bool include_introns) {
+        void printGeneFeaturesGTF(std::ofstream& gtfFile, std::string chr, bool include_introns) {
             SPtrFeature<T> f;
-            for (auto itr = uniquefeatures.begin(); itr != uniquefeatures.end(); ++itr) {
+            for (auto itr = features.begin(); itr != features.end(); ++itr) {
+                f = *itr;
+                bool print = true;
+                if (!include_introns && f->getType() == "intron") print = false;
+                if (print) {
+                    gtfFile << chr << "\tunknown\t" << f->getType() << "\t"
+                            << (f->getStart() + 1) << "\t"
+                            << (f->getEnd() + 1) << "\t.\t"
+                            << f->getStrand() << "\t.\tgene_id \""
+                            << this->getId() << "\"; gene_name \""
+                            << this->getId() << "\"; transcript_id \""
+                            << this->getId() << "\""
+                            << std::endl;
+                }
+            }
+        }
+
+        void printGeneUniqueFeaturesGTF(std::ofstream& gtfFile, std::string chr, bool include_introns) {
+            SPtrFeature<T> f;
+            for (auto itr = uniqueFeatures.begin(); itr != uniqueFeatures.end(); ++itr) {
                 f = *itr;
                 bool print = true;
                 if (!include_introns && f->getType() == "intron") print = false;
@@ -558,7 +585,7 @@ namespace genome {
         friend std::ostream& operator<<(std::ostream& os, std::shared_ptr<Gene<T>> obj) {
             os << obj->getId() << " Length: " << obj->getLength() << " " << obj->getStart() << "-" << obj->getEnd();
             os << " Isoforms: " << obj->getIsoforms().size();
-            os << " Unique: " << obj->getUniquefeatures().size();
+            os << " Unique: " << obj->getFeatures().size();
             os << std::endl;
             os << "\t\tIsoforms: " << std::endl;
             for (auto i : obj->getIsoforms()) {
@@ -566,7 +593,7 @@ namespace genome {
                 os << std::endl;
             }
             os << "\t\tUnique: " << std::endl;
-            for (auto i : obj->getUniquefeatures()) {
+            for (auto i : obj->getFeatures()) {
                 os << "\t\t" << i;
                 os << std::endl;
             }
@@ -578,7 +605,8 @@ namespace genome {
         IsoformMultiSet<T> isoforms;
         IsoformUnMap<T> isoformsNameIndex;
         SPtrIsoform<T> currentIsoform;
-        std::set<SPtrFeature<T>, typename Isoform<T>::FeatureComp> uniquefeatures;
+        std::set<SPtrFeature<T>, typename Isoform<T>::FeatureComp> features;
+        std::set<SPtrFeature<T>, typename Isoform<T>::FeatureComp> uniqueFeatures;
     };
 
     template<typename T>
@@ -597,6 +625,9 @@ namespace genome {
     using GeneMultiSetItr = typename GeneMultiSet<T>::iterator;
 
     template<typename T>
+    using GeneMultiSetRevItr = typename std::multiset<SPtrGene<T>, typename Isoform<T>::FeatureComp>::reverse_iterator;
+
+    template<typename T>
     using GeneIsoformReadUnMap = typename std::unordered_map<std::string, std::shared_ptr<IsoformUnMap<T>>>;
 
     template<typename T>
@@ -604,6 +635,91 @@ namespace genome {
 
     template<typename T>
     using GeneIsoformUnMapItr = typename GeneIsoformUnMap<T>::iterator;
+
+    template<typename T>
+    SPtrFeature<T> feature_overlap(SPtrFeature<T> f1, SPtrFeature<T> f2) {
+        if (static_cast<int> (f1->getEnd()) - static_cast<int> (f2->getStart()) >= 0
+                && static_cast<int> (f2->getEnd()) - static_cast<int> (f1->getStart()) >= 0) {
+            unsigned int start = std::max(f1->getStart(), f2->getStart());
+            unsigned int end = std::min(f1->getEnd(), f2->getEnd());
+            SPtrFeature<T> f = std::make_shared<Feature < T >> (f1->getType(), start, end);
+            f->setStrand(f1->getStrand());
+            return f;
+        }
+        return nullptr;
+    }
+
+    template<typename T>
+    SPtrFeature<T> feature_overlap(SPtrFeature<T> f1, SPtrGene<T> f2) {
+        if (static_cast<int> (f1->getEnd()) - static_cast<int> (f2->getStart()) >= 0
+                && static_cast<int> (f2->getEnd()) - static_cast<int> (f1->getStart()) >= 0) {
+            unsigned int start = std::max(f1->getStart(), f2->getStart());
+            unsigned int end = std::min(f1->getEnd(), f2->getEnd());
+            SPtrFeature<T> f = std::make_shared<Feature < T >> (f1->getType(), start, end);
+            f->setStrand(f1->getStrand());
+            return f;
+        }
+        return nullptr;
+    }
+
+    template<typename T>
+    SPtrFeature<T> feature_union(SPtrFeature<T> f1, SPtrFeature<T> f2) {
+        if (static_cast<int> (f1->getEnd()) - static_cast<int> (f2->getStart()) >= 0
+                && static_cast<int> (f2->getEnd()) - static_cast<int> (f1->getEnd()) >= 0) {
+            unsigned int start = std::min(f1->getStart(), f2->getStart());
+            unsigned int end = std::max(f1->getEnd(), f2->getEnd());
+            SPtrFeature<T> f = std::make_shared<Feature < T >> (f1->getType(), start, end);
+            f->setStrand(f1->getStrand());
+            return f;
+        }
+        return nullptr;
+    }
+
+    template<typename T>
+    std::set<SPtrFeature<T>, typename Isoform<T>::FeatureComp> feature_disunion(SPtrFeature<T> f1, SPtrGene<T> f2) {
+        std::set < SPtrFeature<T>, typename Isoform<T>::FeatureComp> features;
+        SPtrFeature<T> fi;
+        SPtrFeature<T> f = feature_overlap(f1, f2);
+        if (f && !(f->getStart() == f1->getStart() && f->getEnd() == f1->getEnd())) {
+            if (f1->getEnd() == f->getEnd()) {
+                fi = std::make_shared<Feature < T >> (f1->getType(), f1->getStart(), f->getStart() - 1);
+                fi->setStrand(f1->getStrand());
+                features.insert(fi);
+            } else if (f1->getStart() == f->getStart()) {
+                fi = std::make_shared<Feature < T >> (f1->getType(), f->getEnd() + 1, f1->getEnd());
+                fi->setStrand(f1->getStrand());
+                features.insert(fi);
+            } else {
+                fi = std::make_shared<Feature < T >> (f1->getType(), f1->getStart(), f->getStart() - 1);
+                fi->setStrand(f1->getStrand());
+                features.insert(fi);
+
+                fi = std::make_shared<Feature < T >> (f1->getType(), f->getEnd() + 1, f1->getEnd());
+                fi->setStrand(f1->getStrand());
+                features.insert(fi);
+            }
+        }
+        return features;
+    }
+
+    template<typename T>
+    std::set<SPtrFeature<T>, typename Isoform<T>::FeatureComp> features_union(std::set < SPtrFeature<T>, typename Isoform<T>::FeatureComp> segments,
+            std::set < SPtrFeature<T>, typename Isoform<T>::FeatureComp> feats) {
+        std::set < SPtrFeature<T>, typename Isoform<T>::FeatureComp> features;
+
+        if (feats.empty()) return segments;
+
+        for (auto sIt = segments.begin(); sIt != segments.end(); ++sIt) {
+            for (auto s2It = feats.begin(); s2It != feats.end(); ++s2It) {
+                SPtrFeature<T> f = feature_overlap((*sIt), (*s2It));
+                if (f) {
+                    features.insert(f);
+                }
+            }
+        }
+
+        return features;
+    }
 
     template<typename T>
     class Chromosome {
@@ -660,39 +776,40 @@ namespace genome {
             return it;
         }
 
-        void createUniqueIntronsPerGene(int intronCutOff) {
+        void createGeneUniqueFeatures() {
             for (GeneMultiSetItr<T> gIt = genes.begin(); gIt != genes.end(); ++gIt) {
                 SPtrGene<T> g = *gIt;
-                GeneMultiSetItr<T> overlapDown = genes.end();
-                GeneMultiSetItr<T> overlapUp = genes.end();
-                for (auto it = gIt; it != genes.begin(); --it) {
-                    if (it != gIt) {
-                        if (std::distance(it, gIt) > 6 && (*it)->getEnd() < g->getStart()) break;
-                        overlapDown = it;
-                    }
-                }
-                for (auto it = gIt; it != genes.end(); ++it) {
-                    if (it != gIt) {
-                        if (std::distance(gIt, it) > 6 && g->getEnd() < (*it)->getStart()) break;
-                        overlapUp = it;
-                    }
-                }
-                if (overlapDown != genes.end() && overlapUp != genes.end()) {
-                    ++overlapUp;
-                    for (auto it = overlapDown; it != overlapUp; ++it) {
-                        if (it != gIt) {
-                            g->createUniqueIntronFeatures(*it, intronCutOff);
+                for (FeatureSetItr<T> fIt = g->getFeatures().begin(); fIt != g->getFeatures().end(); ++fIt) {
+                    SPtrFeature<T> f = *fIt;
+                    std::set < SPtrFeature<T>, typename Isoform<T>::FeatureComp> segments;
+                    bool overlapped = false;
+                    for (GeneMultiSetItr<T> gIt2 = genes.begin(); gIt2 != genes.end(); ++gIt2) {
+                        if (gIt != gIt2) {
+                            SPtrGene<T> g2 = *gIt2;
+                            if (g2->getStart() <= f->getStart() && g2->getEnd() >= f->getEnd()) {
+                                segments.clear();
+                                overlapped = true;
+                                break;
+                            }
+                            std::set < SPtrFeature<T>, typename Isoform<T>::FeatureComp> feats = feature_disunion(f, g2);
+                            
+                            if (segments.empty()) {
+                                segments.insert(feats.begin(), feats.end());
+                            } else {
+                                segments = features_union(segments, feats);
+                                if (segments.empty()) {
+                                    overlapped = true;
+                                    break;
+                                }
+
+                            }
                         }
                     }
-                } else if (overlapDown != genes.end()) {
-                    for (auto it = overlapDown; it != gIt; ++it) {
-                        g->createUniqueIntronFeatures(*it, intronCutOff);
-                    }
-                } else if (overlapUp != genes.end()) {
-                    ++overlapUp;
-                    for (auto it = gIt; it != overlapUp; ++it) {
-                        if (it != gIt) {
-                            g->createUniqueIntronFeatures(*it, intronCutOff);
+                    if (!overlapped) {
+                        if (!segments.empty()) {
+                            g->getUniqueFeatures().insert(segments.begin(), segments.end());                            
+                        } else {
+                            g->getUniqueFeatures().insert(f);
                         }
                     }
                 }
@@ -710,13 +827,14 @@ namespace genome {
                         i->insertFeaturesInGaps(feat.first, feat.second);
                     }
                     currentGene = std::make_shared<Gene < T >> (geneName, i->getStart(), i->getEnd());
-                    currentGene->setStrand(i->getStrand());
-                    currentGene->setLength(i->getLength());
-                    currentGene->getIsoforms().insert(i);
-
+                    currentGene->setStrand(i->getStrand());                    
+                    currentGene->getIsoforms().insert(i);                    
+                    unsigned int length = 0;
                     for (auto fIt : i->getFeatures()) {
-                        currentGene->getUniquefeatures().insert(fIt);
+                        if ((*fIt).getType().compare("exon") == 0) length += (*fIt).getLength();
+                        currentGene->getFeatures().insert(fIt);
                     }
+                    currentGene->setLength(length);
 
                     std::pair < GeneUnMapItr<T>, bool> res = genesNameIndex.insert(make_pair(geneName, currentGene));
                     if (!res.second) {
@@ -772,7 +890,7 @@ namespace genome {
                         currentGene->setIsoforms(iSet);
                         SPtrIsoform<T> i = *(iSet.begin());
                         currentGene->setStrand(i->getStrand());
-                        currentGene->createUniqueIsoformFeatures(intronCutOff);
+                        currentGene->createGeneFeatures(intronCutOff);
                         std::pair < GeneUnMapItr<T>, bool> res = genesNameIndex.insert(make_pair(geneNamewithCopy, currentGene));
                         if (!res.second) {
                             std::cerr << "Error inserting gene from segments" << std::endl;
@@ -787,7 +905,7 @@ namespace genome {
                 }
             }
             geneIsoforms.clear();
-            this->createUniqueIntronsPerGene(intronCutOff);
+            this->createGeneUniqueFeatures();
         }
 
         /**

@@ -21,7 +21,33 @@ the union of the introns (intronic region for genes and transcripts).
 
 ## Output files
 
-### Output file: _[gene|transcript].out
+### Output file: _gene.out
+This file is created per sample and includes the TPM values at gene or 
+transcript level. 
+
+The columns are:
+
+Exon_Length\tExon_Count_Reads\tExon_TPM\tIntron_Length\tIntron_Count_Reads\tIntron_TPM"
+
+1. Gene_Id
+2. Chr
+3. Length (Transcript length)
+4. Count_Reads (Reads assigned to the gene or transcript)
+5. TPM (TPM value for the gene or transcript)
+6. Length of non overlapping gene exons
+7. Reads assigned to the non overlapping gene exons
+8. TPM for the non overlapping gene exons
+9. Length of non overlapping gene introns
+10. Reads assigned to the non overlapping gene introns
+11. TPM for the non overlapping gene introns
+12. Exon_Length (Sum of all exonic regions)
+13. Exon_Count_Reads (All reads assigned to the exonic regions)
+14. Exon_TPM (TPM for all the exonic regions)
+15. Intron_Length (Sum of all intronic regions)
+16. Intron_Count_Reads (All reads assigned to the intronic regions)
+17. Intron_TPM (TPM for all the intronic regions)
+
+### Output file: _transcript.out
 This file is created per sample and includes the TPM values at gene or 
 transcript level. 
 

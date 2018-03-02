@@ -18,6 +18,8 @@ namespace ngs {
 
         SampleData() {
             this->TPM = 0.0;
+            this->uniqueTPM = 0.0;
+            this->uniqueTPMIntron = 0.0;
             this->TPMExon = 0.0;
             this->TPMIntron = 0.0;
             this->exonReads = 0;
@@ -25,12 +27,15 @@ namespace ngs {
             this->intronReads = 0;
             this->intronLength = 0;
             this->reads = 0;
+            this->uniqueReads = 0;
             this->TPMBridges = 0.0;
             this->bridgeReads = 0;
         }
 
         SampleData(int reads) {
             this->TPM = 0.0;
+            this->uniqueTPM = 0.0;
+            this->uniqueTPMIntron = 0.0;
             this->TPMExon = 0.0;
             this->TPMIntron = 0.0;
             this->exonReads = 0;
@@ -38,6 +43,7 @@ namespace ngs {
             this->intronReads = 0;
             this->intronLength = 0;
             this->reads = reads;
+            this->uniqueReads = 0;
             this->TPMBridges = 0.0;
             this->bridgeReads = 0;
         }
@@ -51,6 +57,22 @@ namespace ngs {
 
         void setTPM(double TPM) {
             this->TPM = TPM;
+        }
+
+        double getUniqueTPM() const {
+            return uniqueTPM;
+        }
+
+        void setUniqueTPM(double uniqueTPM) {
+            this->uniqueTPM = uniqueTPM;
+        }
+
+        double getUniqueTPMIntron() const {
+            return uniqueTPMIntron;
+        }
+
+        void setUniqueTPMIntron(double uniqueTPMIntron) {
+            this->uniqueTPMIntron = uniqueTPMIntron;
         }
 
         double getTPMExon() const {
@@ -113,6 +135,54 @@ namespace ngs {
             this->reads += reads;
         }
 
+        int getUniqueReads() const {
+            return uniqueReads;
+        }
+
+        void increaseUniqueReads() {
+            this->uniqueReads++;
+        }
+
+        void increaseUniqueReads(int uniqueReads) {
+            this->uniqueReads += uniqueReads;
+        }
+
+        int getUniqueReadsIntron() const {
+            return uniqueReadsIntron;
+        }
+
+        void increaseUniqueReadsIntron() {
+            this->uniqueReadsIntron++;
+        }
+
+        void increaseUniqueReadsIntron(int uniqueReadsIntron) {
+            this->uniqueReadsIntron += uniqueReadsIntron;
+        }
+
+        int getUniqueIntronLength() const {
+            return uniqueIntronLength;
+        }
+
+        void setUniqueIntronLength(int uniqueIntronLength) {
+            this->uniqueIntronLength = uniqueIntronLength;
+        }
+
+        void increaseUniqueIntronLength(int uniqueIntronLength) {
+            this->uniqueIntronLength += uniqueIntronLength;
+        }
+
+        int getUniqueLength() const {
+            return uniqueLength;
+        }
+
+        void setUniqueLength(int uniqueLength) {
+            this->uniqueLength = uniqueLength;
+        }
+
+        void increaseUniqueLength(int uniqueLength) {
+            this->uniqueLength += uniqueLength;
+        }
+
         float getTPMBridges() const {
             return TPMBridges;
         }
@@ -131,7 +201,13 @@ namespace ngs {
 
     private:
         int reads;
+        int uniqueReads;
+        int uniqueLength;
+        int uniqueReadsIntron;
+        int uniqueIntronLength;
         double TPM;
+        double uniqueTPM;
+        double uniqueTPMIntron;
         int exonLength;
         int exonReads;
         int intronReads;
@@ -217,7 +293,7 @@ namespace ngs {
         void processReadAtGeneLevel(SPtrGeneNGS gene, std::string sampleName, unsigned int start, unsigned int end);
         void processReadAtGeneLevelUnique(SPtrGeneNGS gene, std::string sampleName, unsigned int start, unsigned int end);
         void processReadAtIsoformLevel(SPtrIsoformNGS isoform, std::string sampleName, unsigned int start, unsigned int end);
-        
+
         void loadTPMCalculatorGenesOutput(std::string dirName);
 
         void createSIMSingleReadsIR(std::string outFileName,

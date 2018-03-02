@@ -91,11 +91,11 @@ namespace sequence {
         virtual ~DNA() {
         }
         
-        DNA shuffle() {
-            DNA s(*this);
-            s.shuffle();
-            return s;
-        }
+//        DNA shuffle() {
+//            DNA s(*this);
+//            s.shuffle();
+//            return s;
+//        }
 
         DNA complement() {
             DNA s(*this);
