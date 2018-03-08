@@ -911,7 +911,6 @@ void ReadFactory::createSIMSingleReadsIR(std::string outFileName, sequence::DNAC
 }
 
 void ReadFactory::loadTPMCalculatorGenesOutput(std::string dirName) {
-    int count = 0;
     struct dirent *dp;
     string GENESentsufix("_genes.ent");
     string GENESoutsufix("_genes.out");
