@@ -116,8 +116,7 @@ double gammafn(double x) {
             n = -n;
 
             for (i = 0; i < n; i++) {
-                if (fabs(x + i) > 10.0e-15)
-                    value /= (x + i);
+                value /= (fabs(x + i) > 10.0e-15) ? (x + i): 1.0;
             }
             return value;
         } else {
