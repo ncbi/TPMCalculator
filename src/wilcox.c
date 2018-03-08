@@ -121,7 +121,9 @@ double dwilcox(double x, double m, double n, int give_log) {
     if ((x < 0) || (x > m * n))
         return (R_D__0);
 
-    int mm = (int) m, nn = (int) n, xx = (int) x;
+    int mm = floor(m);
+    int nn = floor(n);
+    int xx = floor(x);
     w_init_maybe(wilcox, mm, nn);
     d = give_log ?
             log(cwilcox(wilcox, xx, mm, nn)) - lchoose(m + n, n) :
@@ -154,7 +156,8 @@ double pwilcox(double q, double m, double n, int lower_tail, int log_p) {
     if (q >= m * n)
         return (R_DT_1);
 
-    int mm = (int) m, nn = (int) n;
+    int mm = floor(m);
+    int nn = floor(n);
     w_init_maybe(wilcox, mm, nn);
     c = choose(m + n, n);
     p = 0.0;
@@ -204,7 +207,8 @@ double qwilcox(double x, double m, double n, int lower_tail, int log_p) {
     if (log_p || !lower_tail)
         x = R_DT_qIv(x); /* lower_tail,non-log "p" */
 
-    int mm = (int) m, nn = (int) n;
+    int mm = floor(m);
+    int nn = floor(n);
     w_init_maybe(wilcox, mm, nn);
     c = choose(m + n, n);
     p = 0;
@@ -222,7 +226,7 @@ double qwilcox(double x, double m, double n, int lower_tail, int log_p) {
         for (;;) {
             p += cwilcox(wilcox, q, mm, nn) / c;
             if (p > x) {
-                q = (int) (m * n - q);
+                q = floor(m * n - q);
                 break;
             }
             q++;
@@ -251,7 +255,7 @@ double rwilcox(double m, double n) {
         return (0);
 
     r = 0.0;
-    k = (int) (m + n);
+    k = floor(m + n);
     x = (int *) calloc((size_t) k, sizeof (int));
 #ifdef MATHLIB_STANDALONE
     if (!x) MATHLIB_ERROR(_("wilcox allocation error %d"), 4);
