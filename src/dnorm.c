@@ -16,9 +16,9 @@ double dnorm4(double x, double mu, double sigma, int give_log) {
         if (sigma < 0) ML_ERR_return_NAN;
         /* sigma == 0 */
         return (x == mu) ? ML_POSINF : R_D__0;
+    } else {
+        x = (x - mu) / sigma;
     }
-    x = (x - mu) / sigma;
-
     if (!R_FINITE(x)) return R_D__0;
 
     x = fabs(x);
