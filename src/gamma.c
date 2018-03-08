@@ -94,7 +94,7 @@ double gammafn(double x) {
          * Reduce the interval and find gamma(1 + y) for 0 <= y < 1
          * first of all. */
 
-        int n = (int) x;
+        int n = floor(x);
         if (x < 0) --n;
         y = x - n; /* n = floor(x)  ==>	y in [ 0, 1 ) */
         --n;
