@@ -417,7 +417,7 @@ L_bfrac:
 
 L140:
     /* b0 := fractional_part( b0 )  in (0, 1]  */
-    n = (int) b0;
+    n = floor(b0);
     b0 -= n;
     if (b0 == 0.) {
         --n;
@@ -654,7 +654,7 @@ static double bpser(double a, double b, double x, double eps, int log_p) {
             } else { /* 	------	a0 < 1 < b0 < 8	 ------ */
 
                 u = gamln1(a0);
-                m = (int) (b0 - 1.);
+                m = floor(b0 - 1.);
                 if (m >= 1) {
                     c = 1.;
                     for (i = 1; i <= m; ++i) {
@@ -957,7 +957,7 @@ static double brcomp(double a, double b, double x, double y, int log_p) {
         /* else : 		  ALGORITHM FOR 1 < b0 < 8 */
 
         u = gamln1(a0);
-        n = (int) (b0 - 1.);
+        n = floor(b0 - 1.);
         if (n >= 1) {
             c = 1.;
             for (i = 1; i <= n; ++i) {
@@ -1093,7 +1093,7 @@ static double brcmp1(int mu, double a, double b, double x, double y, int give_lo
         // else:               algorithm for	a0 < 1 < b0 < 8
         // L60:
         u = gamln1(a0);
-        int n = (int) (b0 - 1.);
+        int n = floor(b0 - 1.);
         if (n >= 1) {
             c = 1.;
             for (int i = 1; i <= n; ++i) {
@@ -1972,9 +1972,9 @@ static double psi(double x) {
             if (w >= xmax1) {
                 goto L_err;
             }
-            nq = (int) w;
+            nq = floor(w);
             w -= (double) nq;
-            nq = (int) (w * 4.);
+            nq = floor(w * 4.);
             w = (w - (double) nq * 0.25) * 4.;
             /* --------------------------------------------------------------------- */
             /*     W IS NOW RELATED TO THE FRACTIONAL PART OF  4. * X. */
@@ -2103,7 +2103,7 @@ static double betaln(double a0, double b0) {
         // else L30:    REDUCTION OF A WHEN B <= 1000
 
         if (b <= 1e3) {
-            int n = (int) (a - 1.);
+            int n = floor(a - 1.);
             w = 1.;
             for (int i = 1; i <= n; ++i) {
                 a += -1.;
@@ -2118,7 +2118,7 @@ static double betaln(double a0, double b0) {
             // else
 L40:
             // 	1 < A <= B < 8 :  reduction of B
-            n = (int) (b - 1.);
+            n = floor(b - 1.);
             double z = 1.;
             for (int i = 1; i <= n; ++i) {
                 b += -1.;
@@ -2126,7 +2126,7 @@ L40:
             }
             return w + log(z) + (gamln(a) + (gamln(b) - gsumln(a, b)));
         } else { // L50:	reduction of A when  B > 1000
-            int n = (int) (a - 1.);
+            int n = floor(a - 1.);
             w = 1.;
             for (int i = 1; i <= n; ++i) {
                 a += -1.;
@@ -2316,7 +2316,7 @@ static double gamln(double a) {
         return gamln1(a - 0.5 - 0.5);
 
     else if (a < 10.) {
-        int i, n = (int) (a - 1.25);
+        int i, n = floor(a - 1.25);
         double t = a;
         double w = 1.;
         for (i = 1; i <= n; ++i) {
