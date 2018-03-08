@@ -27,7 +27,7 @@ double dnorm4(double x, double mu, double sigma, int give_log) {
         return -(M_LN_SQRT_2PI + 0.5 * x * x + log(sigma));
     //  M_1_SQRT_2PI = 1 / sqrt(2 * pi)
     // more accurate, less fast :
-    if (x < 5) return M_1_SQRT_2PI * exp(-0.5 * x * x) / sigma;
+    if (x < 5 && sigma != 0.0) return M_1_SQRT_2PI * exp(-0.5 * x * x) / sigma;
 
     /* ELSE:
 
