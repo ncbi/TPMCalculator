@@ -898,8 +898,7 @@ void ReadFactory::createSIMSingleReadsIR(std::string outFileName, sequence::DNAC
                         }
                     }
                 }
-            } catch (exceptions::NotFoundException ex) {
-                cout << ex.what() << endl;
+            } catch (exceptions::NotFoundException ex) {                
             }
         }
 
