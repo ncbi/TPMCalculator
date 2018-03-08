@@ -417,7 +417,7 @@ L_bfrac:
 
 L140:
     /* b0 := fractional_part( b0 )  in (0, 1]  */
-    n = (int) b0;
+    n = ceil(b0);
     b0 -= n;
     if (b0 == 0.) {
         --n;
