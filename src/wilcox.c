@@ -300,7 +300,8 @@ double rwilcox(double m, double n) {
     for (i = 0; i < n; i++) {
         j = (int) floor(k * unif_rand());
         r += x[j];
-        x[j] = x[--k];
+        if (k > 0)
+            x[j] = x[--k];
     }
     if (x)
         free(x);
