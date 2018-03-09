@@ -27,7 +27,7 @@ double dnorm4(double x, double mu, double sigma, int give_log) {
         return -(M_LN_SQRT_2PI + 0.5 * x * x + log(sigma));
     //  M_1_SQRT_2PI = 1 / sqrt(2 * pi)
     // more accurate, less fast :
-    if (x < 5 && sigma != 0.0) return M_1_SQRT_2PI * exp(-0.5 * x * x) / sigma;
+    if (x < 5 && fabs(sigma) > 1.0e-15) return M_1_SQRT_2PI * exp(-0.5 * x * x) / sigma;
 
     /* ELSE:
 
@@ -58,6 +58,11 @@ double dnorm4(double x, double mu, double sigma, int give_log) {
     double x1 = //  R_forceint(x * 65536) / 65536 =
             ldexp(R_forceint(ldexp(x, 16)), -16);
     double x2 = x - x1;
-    return M_1_SQRT_2PI / sigma *
+    double result;
+    if (fabs(sigma) > 1.0e-15)
+        result =  M_1_SQRT_2PI / sigma *
             (exp(-0.5 * x1 * x1) * exp((-0.5 * x2 - x1) * x2));
+    else
+        result = NAN;
+    return result;
 }
