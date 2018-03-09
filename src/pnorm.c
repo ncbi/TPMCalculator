@@ -18,7 +18,10 @@ double pnorm5(double x, double mu, double sigma, int lower_tail, int log_p) {
         /* sigma = 0 : */
         return (x < mu) ? R_DT_0 : R_DT_1;
     }
-    p = (x - mu) / sigma;
+    if (fabs(sigma) > 1e-15)
+        p = (x - mu) / sigma;
+    else
+        p = INFINITY;
     if (!isfinite(p))
         return (x < mu) ? R_DT_0 : R_DT_1;
     x = p;
@@ -157,7 +160,7 @@ void pnorm_both(double x, double *cum, double *ccum, int i_tail, int log_p) {
 
         do_del(y);
         swap_tail;
-    }        /* else	  |x| > sqrt(32) = 5.657 :
+    }/* else	  |x| > sqrt(32) = 5.657 :
          * the next two case differentiations were really for lower=T, log=F
          * Particularly	 *not*	for  log_p !
 
