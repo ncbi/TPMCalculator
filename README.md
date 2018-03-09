@@ -147,7 +147,7 @@ Usage: ./bin/TPMCalculator -g GTF_file [-d BAM_files_directory|-i BAM_file]
 
 Roberto Vera Alvarez, PhD
 
-Emails: veraalva@ncbi.nlm.nih.gov, r78v10a07@gmail.com
+Emails: veraalva@ncbi.nlm.nih.gov
 
 # Public Domain notice
 

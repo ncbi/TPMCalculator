@@ -42,7 +42,7 @@ void print_usage(char *program_name, int exit_code) {
     cerr << "-p    Use only properly paired reads. Default: No. Recommended for paired-end reads.\n";
     cerr << "\n********************************************************************************\n";
     cerr << "\n                        Roberto Vera Alvarez, PhD\n";
-    cerr << "            Emails: veraalva@ncbi.nlm.nih.gov, r78v10a07@gmail.com\n\n";
+    cerr << "                      Emails: veraalva@ncbi.nlm.nih.gov\n\n";
     cerr << "********************************************************************************\n";
     exit(exit_code);
 }
