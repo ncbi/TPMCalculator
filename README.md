@@ -28,8 +28,6 @@ transcript level.
 
 The columns are:
 
-Exon_Length\tExon_Count_Reads\tExon_TPM\tIntron_Length\tIntron_Count_Reads\tIntron_TPM"
-
 1. Gene_Id
 2. Chr
 3. Length (Transcript length)
