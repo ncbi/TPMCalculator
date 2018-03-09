@@ -30,8 +30,13 @@ double lbeta(double a, double b) {
     } else if (q >= 10) {
         /* p is small, but q is big. */
         corr = lgammacor(q) - lgammacor(p + q);
+        double d;
+        if (fabs(p + q) > 1e-15)
+            d = log1p(-p / (p + q));
+        else
+            return NAN;
         return lgammafn(p) + corr + p - p * log(p + q)
-                + (q - 0.5) * log1p(-p / (p + q));
+                + (q - 0.5) * d;
     } else
         /* p and q are small: p <= q < 10. */
         /* R change for very small args */
