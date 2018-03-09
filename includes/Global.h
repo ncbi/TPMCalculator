@@ -48,6 +48,11 @@ public:
             s_instance = new Global;
         return s_instance;
     }
+    
+    virtual ~Global() {
+        if (s_instance) delete s_instance;
+    }
+
 };
 
 class Log {

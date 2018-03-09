@@ -277,7 +277,9 @@ namespace ngs {
 
     class ReadFactory {
     public:
-        ReadFactory();
+        ReadFactory(){
+            genomeFactory = nullptr;
+        }
         virtual ~ReadFactory();
 
         GenomeFactoryNGS& getGenomeFactory() {

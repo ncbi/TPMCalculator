@@ -26,12 +26,8 @@ double dnorm4(double x, double mu, double sigma, int give_log) {
     if (give_log)
         return -(M_LN_SQRT_2PI + 0.5 * x * x + log(sigma));
     //  M_1_SQRT_2PI = 1 / sqrt(2 * pi)
-#ifdef MATHLIB_FAST_dnorm
-    // and for R <= 3.0.x and R-devel upto 2014-01-01:
-    return M_1_SQRT_2PI * exp(-0.5 * x * x) / sigma;
-#else
     // more accurate, less fast :
-    if (x < 5) return M_1_SQRT_2PI * exp(-0.5 * x * x) / sigma;
+    if (x < 5 && sigma != 0.0) return M_1_SQRT_2PI * exp(-0.5 * x * x) / sigma;
 
     /* ELSE:
 
@@ -64,5 +60,4 @@ double dnorm4(double x, double mu, double sigma, int give_log) {
     double x2 = x - x1;
     return M_1_SQRT_2PI / sigma *
             (exp(-0.5 * x1 * x1) * exp((-0.5 * x2 - x1) * x2));
-#endif
 }

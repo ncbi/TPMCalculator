@@ -9,10 +9,6 @@
         <group name="KillerMutations"/>
         <group>
             <file>file:/Users/veraalva/Work/Developer/C/ncbi/TPMCalculator/src/gamma.c</file>
-            <file>file:/Users/veraalva/Work/Developer/C/ncbi/TPMCalculator/src/wilcox.c</file>
-            <file>file:/Users/veraalva/Work/Developer/C/ncbi/TPMCalculator/src/main.cpp</file>
-            <file>file:/Users/veraalva/Work/Developer/C/ncbi/TPMCalculator/src/bratio.c</file>
-            <file>file:/Users/veraalva/Work/Developer/C/ncbi/TPMCalculator/src/dnorm.c</file>
         </group>
     </open-files>
 </project-private>
