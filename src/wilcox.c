@@ -44,8 +44,16 @@ void w_init_maybe(wilcox_t *wilcox, int m, int n) {
         m = max(m, WILCOX_MAX);
         n = max(n, WILCOX_MAX);
         wilcox->w = (double ***) calloc((size_t) m + 1, sizeof (double **));
+        if (!wilcox->w) {
+            fprintf(stderr, "Not enough memory to allocate memory\n");
+            exit(-1);
+        }
         for (i = 0; i <= m; i++) {
             wilcox->w[i] = (double **) calloc((size_t) n + 1, sizeof (double *));
+            if (!wilcox->w[i]) {
+                fprintf(stderr, "Not enough memory to allocate memory\n");
+                exit(-1);
+            }
             for (j = 0; j <= n; j++) {
                 wilcox->w[i][j] = 0;
             }
@@ -89,7 +97,7 @@ double cwilcox(wilcox_t *wilcox, int k, int m, int n) {
      */
     if (j > 0 && k < j) return cwilcox(wilcox, k, i, k);
 
-    if (wilcox->w[i][j] == 0) {
+    if (!wilcox->w[i][j]) {
         wilcox->w[i][j] = (double *) calloc((size_t) c + 1, sizeof (double));
         if (!wilcox->w[i][j]) {
             fprintf(stderr, "Not enough memory to allocate memory\n");
