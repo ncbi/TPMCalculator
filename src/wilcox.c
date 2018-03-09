@@ -15,13 +15,16 @@ void w_free(wilcox_t *w) {
     int i, j;
 
     for (i = w->m; i >= 0; i--) {
-        for (j = w->n; j >= 0; j--) {
-            if (w->w[i][j] != 0)
-                free((void *) w->w[i][j]);
+        if (w->w[i]) {
+            for (j = w->n; j >= 0; j--) {
+                if (w->w[i][j])
+                    free((void *) w->w[i][j]);
+            }
+            free((void *) w->w[i]);
         }
-        free((void *) w->w[i]);
     }
-    free((void *) w->w);
+    if (w->w)
+        free((void *) w->w);
     w->w = NULL;
     w->m = w->n = 0;
 }
@@ -138,7 +141,8 @@ double dwilcox(double x, double m, double n, int give_log) {
             log(cwilcox(wilcox, xx, mm, nn)) - lchoose(m + n, n) :
             cwilcox(wilcox, xx, mm, nn) / choose(m + n, n);
     w_free(wilcox);
-    free(wilcox);
+    if (wilcox)
+        free(wilcox);
     return (d);
 }
 
@@ -186,7 +190,8 @@ double pwilcox(double q, double m, double n, int lower_tail, int log_p) {
         lower_tail = !lower_tail; /* p = 1 - p; */
     }
     w_free(wilcox);
-    free(wilcox);
+    if (wilcox)
+        free(wilcox);
     return p;
 } /* pwilcox */
 
@@ -250,7 +255,8 @@ double qwilcox(double x, double m, double n, int lower_tail, int log_p) {
         }
     }
     w_free(wilcox);
-    free(wilcox);
+    if (wilcox)
+        free(wilcox);
     return (q);
 }
 
@@ -288,7 +294,8 @@ double rwilcox(double m, double n) {
         r += x[j];
         x[j] = x[--k];
     }
-    free(x);
+    if (x)
+        free(x);
     return (r - n * (n - 1) / 2);
 }
 
