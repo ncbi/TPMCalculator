@@ -31,7 +31,7 @@ double lbeta(double a, double b) {
         /* p is small, but q is big. */
         corr = lgammacor(q) - lgammacor(p + q);
         double d = p + q;
-        if (fabs(d) > 1e-15)
+        if (fabs(d) > 1e-25)
             d = log1p(-p / d);
         else
             return INFINITY;

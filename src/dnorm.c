@@ -59,7 +59,7 @@ double dnorm4(double x, double mu, double sigma, int give_log) {
             ldexp(R_forceint(ldexp(x, 16)), -16);
     double x2 = x - x1;
     double result;
-    if (fabs(sigma) > 1.0e-15)
+    if (fabs(sigma) > 1e-25)
         result =  M_1_SQRT_2PI / sigma *
             (exp(-0.5 * x1 * x1) * exp((-0.5 * x2 - x1) * x2));
     else

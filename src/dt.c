@@ -18,7 +18,7 @@ double dt(double x, double n, int give_log) {
 
     double u, t = -bd0(n / 2., (n + 1) / 2.) + stirlerr((n + 1) / 2.) - stirlerr(n / 2.);
     double x2n = INFINITY;
-    if (fabs(n) > 1e-15)
+    if (fabs(n) > 1e-25)
         x2n = x * x / n; // in  [0, Inf]
     double ax = 0., // <- -Wpedantic
             l_x2n; // := log(sqrt(1 + x2n)) = log(1 + x2n)/2
