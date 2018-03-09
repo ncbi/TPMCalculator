@@ -21,7 +21,7 @@ double pnorm5(double x, double mu, double sigma, int lower_tail, int log_p) {
     if (fabs(sigma) > 1e-15)
         p = (x - mu) / sigma;
     else
-        return NAN;
+        p = INFINITY;
     if (!isfinite(p))
         return (x < mu) ? R_DT_0 : R_DT_1;
     x = p;

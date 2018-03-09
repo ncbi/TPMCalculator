@@ -38,9 +38,9 @@ double lgammacor(double x) {
         tmp = 10 / x;
         return chebyshev_eval(tmp * tmp * 2 - 1, algmcs, nalgm) / x;
     }
-    double d;
-    if (fabs((x * 12)) > 1e-15)
-        return 1 / (x * 12);
-    return NAN;
+    double d = x * 12;
+    if (fabs(d) > 1e-15)
+        return 1 / d;
+    return INFINITY;
 }
 

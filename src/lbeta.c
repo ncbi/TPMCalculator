@@ -30,11 +30,11 @@ double lbeta(double a, double b) {
     } else if (q >= 10) {
         /* p is small, but q is big. */
         corr = lgammacor(q) - lgammacor(p + q);
-        double d;
-        if (fabs(p + q) > 1e-15)
-            d = log1p(-p / (p + q));
+        double d = p + q;
+        if (fabs(d) > 1e-15)
+            d = log1p(-p / d);
         else
-            return NAN;
+            return INFINITY;
         return lgammafn(p) + corr + p - p * log(p + q)
                 + (q - 0.5) * d;
     } else

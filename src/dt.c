@@ -17,8 +17,8 @@ double dt(double x, double n, int give_log) {
         return dnorm(x, 0., 1., give_log);
 
     double u, t = -bd0(n / 2., (n + 1) / 2.) + stirlerr((n + 1) / 2.) - stirlerr(n / 2.);
-    double x2n;
-    if (fabs(x) > 1e-15)
+    double x2n = INFINITY;
+    if (fabs(n) > 1e-15)
         x2n = x * x / n; // in  [0, Inf]
     double ax = 0., // <- -Wpedantic
             l_x2n; // := log(sqrt(1 + x2n)) = log(1 + x2n)/2
