@@ -6,22 +6,25 @@
 //static double ***w; /* to store  cwilcox(i,j,k) -> w[i][j][k] */
 //static int allocated_m, allocated_n;
 
-typedef struct wilcox_s{
+typedef struct wilcox_s {
     double ***w;
-    int m,n;
-}wilcox_t;
+    int m, n;
+} wilcox_t;
 
 void w_free(wilcox_t *w) {
     int i, j;
 
     for (i = w->m; i >= 0; i--) {
-        for (j = w->n; j >= 0; j--) {
-            if (w->w[i][j] != 0)
-                free((void *) w->w[i][j]);
+        if (w->w[i]) {
+            for (j = w->n; j >= 0; j--) {
+                if (w->w[i][j])
+                    free((void *) w->w[i][j]);
+            }
+            free((void *) w->w[i]);
         }
-        free((void *) w->w[i]);
     }
-    free((void *) w->w);
+    if (w->w)
+        free((void *) w->w);
     w->w = NULL;
     w->m = w->n = 0;
 }
@@ -41,9 +44,17 @@ void w_init_maybe(wilcox_t *wilcox, int m, int n) {
         m = max(m, WILCOX_MAX);
         n = max(n, WILCOX_MAX);
         wilcox->w = (double ***) calloc((size_t) m + 1, sizeof (double **));
+        if (!wilcox->w) {
+            fprintf(stderr, "Not enough memory to allocate memory\n");
+            exit(-1);
+        }
         for (i = 0; i <= m; i++) {
             wilcox->w[i] = (double **) calloc((size_t) n + 1, sizeof (double *));
-            for(j = 0; j <= n; j++ ){
+            if (!wilcox->w[i]) {
+                fprintf(stderr, "Not enough memory to allocate memory\n");
+                exit(-1);
+            }
+            for (j = 0; j <= n; j++) {
                 wilcox->w[i][j] = 0;
             }
         }
@@ -86,8 +97,12 @@ double cwilcox(wilcox_t *wilcox, int k, int m, int n) {
      */
     if (j > 0 && k < j) return cwilcox(wilcox, k, i, k);
 
-    if (wilcox->w[i][j] == 0) {
+    if (!wilcox->w[i][j]) {
         wilcox->w[i][j] = (double *) calloc((size_t) c + 1, sizeof (double));
+        if (!wilcox->w[i][j]) {
+            fprintf(stderr, "Not enough memory to allocate memory\n");
+            exit(-1);
+        }
         for (l = 0; l <= c; l++)
             wilcox->w[i][j][l] = -1.0;
     }
@@ -99,13 +114,18 @@ double cwilcox(wilcox_t *wilcox, int k, int m, int n) {
         }
 
     }
-//    printf("cwilcox: %d %d %d %f\n", i, j, k, wilcox->w[i][j][k]);
+    //    printf("cwilcox: %d %d %d %f\n", i, j, k, wilcox->w[i][j][k]);
     return (wilcox->w[i][j][k]);
 }
 
 double dwilcox(double x, double m, double n, int give_log) {
     double d;
-    wilcox_t *wilcox = (wilcox_t *) malloc(sizeof(wilcox_t)); 
+    wilcox_t *wilcox = (wilcox_t *) malloc(sizeof (wilcox_t));
+    if (!wilcox) {
+        fprintf(stderr, "Not enough memory to allocate memory\n");
+        exit(-1);
+    }
+
     wilcox->w = NULL;
     wilcox->m = 0;
     wilcox->n = 0;
@@ -128,8 +148,9 @@ double dwilcox(double x, double m, double n, int give_log) {
     d = give_log ?
             log(cwilcox(wilcox, xx, mm, nn)) - lchoose(m + n, n) :
             cwilcox(wilcox, xx, mm, nn) / choose(m + n, n);
-    w_free(wilcox); 
-    free(wilcox);
+    w_free(wilcox);
+    if (wilcox)
+        free(wilcox);
     return (d);
 }
 
@@ -137,7 +158,11 @@ double dwilcox(double x, double m, double n, int give_log) {
 double pwilcox(double q, double m, double n, int lower_tail, int log_p) {
     int i;
     double c, p;
-    wilcox_t *wilcox = (wilcox_t *) malloc(sizeof(wilcox_t)); 
+    wilcox_t *wilcox = (wilcox_t *) malloc(sizeof (wilcox_t));
+    if (!wilcox) {
+        fprintf(stderr, "Not enough memory to allocate memory\n");
+        exit(-1);
+    }
     wilcox->w = NULL;
     wilcox->m = 0;
     wilcox->n = 0;
@@ -172,8 +197,9 @@ double pwilcox(double q, double m, double n, int lower_tail, int log_p) {
             p += cwilcox(wilcox, i, mm, nn) / c;
         lower_tail = !lower_tail; /* p = 1 - p; */
     }
-    w_free(wilcox); 
-    free(wilcox);
+    w_free(wilcox);
+    if (wilcox)
+        free(wilcox);
     return p;
 } /* pwilcox */
 
@@ -181,7 +207,11 @@ double pwilcox(double q, double m, double n, int lower_tail, int log_p) {
 
 double qwilcox(double x, double m, double n, int lower_tail, int log_p) {
     double c, p;
-    wilcox_t *wilcox = (wilcox_t *) malloc(sizeof(wilcox_t)); 
+    wilcox_t *wilcox = (wilcox_t *) malloc(sizeof (wilcox_t));
+    if (!wilcox) {
+        fprintf(stderr, "Not enough memory to allocate memory\n");
+        exit(-1);
+    }
     wilcox->w = NULL;
     wilcox->m = 0;
     wilcox->n = 0;
@@ -232,8 +262,9 @@ double qwilcox(double x, double m, double n, int lower_tail, int log_p) {
             q++;
         }
     }
-    w_free(wilcox); 
-    free(wilcox);
+    w_free(wilcox);
+    if (wilcox)
+        free(wilcox);
     return (q);
 }
 
@@ -257,6 +288,10 @@ double rwilcox(double m, double n) {
     r = 0.0;
     k = floor(m + n);
     x = (int *) calloc((size_t) k, sizeof (int));
+    if (!x) {
+        fprintf(stderr, "Not enough memory to allocate memory\n");
+        exit(-1);
+    }
 #ifdef MATHLIB_STANDALONE
     if (!x) MATHLIB_ERROR(_("wilcox allocation error %d"), 4);
 #endif
@@ -265,9 +300,11 @@ double rwilcox(double m, double n) {
     for (i = 0; i < n; i++) {
         j = (int) floor(k * unif_rand());
         r += x[j];
-        x[j] = x[--k];
+        if (k > 0)
+            x[j] = x[--k];
     }
-    free(x);
+    if (x)
+        free(x);
     return (r - n * (n - 1) / 2);
 }
 

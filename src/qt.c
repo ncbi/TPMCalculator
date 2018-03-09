@@ -141,7 +141,10 @@ double qt(double p, double ndf, int lower_tail, int log_p) {
 
         bool P_ok1 = P > DBL_MIN || !log_p, P_ok = P_ok1;
         if (P_ok1) {
-            y = pow(d * P, 2.0 / ndf);
+            if(fabs(ndf) > 1e-15)
+                y = pow(d * P, 2.0 / ndf);
+            else 
+                return NAN;
             P_ok = (y >= DBL_EPSILON);
         }
         if (!P_ok) {// log.p && P very.small  ||  (d*P)^(2/df) =: y < eps_c
