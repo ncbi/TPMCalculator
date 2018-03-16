@@ -30,7 +30,7 @@ namespace ngs {
             this->exonLength = 0;
             this->intronReads = 0;
             this->intronLength = 0;
-            this->reads = 0;            
+            this->reads = 0;
             this->TPMBridges = 0.0;
             this->bridgeReads = 0;
         }
@@ -49,7 +49,7 @@ namespace ngs {
             this->exonLength = 0;
             this->intronReads = 0;
             this->intronLength = 0;
-            this->reads = reads;            
+            this->reads = reads;
             this->TPMBridges = 0.0;
             this->bridgeReads = 0;
         }
@@ -205,6 +205,31 @@ namespace ngs {
             this->bridgeReads++;
         }
 
+        double getValueFromColumn(std::string column) {
+            if (column.compare("Count_Reads") == 0) {
+                return this->getReads();
+            } else if (column.compare("TPM") == 0) {
+                return this->getTPM();
+            } else if (column.compare("Unique_Count_Reads") == 0) {
+                return this->getUniqueReads();
+            } else if (column.compare("UniqueTPM") == 0) {
+                return this->getUniqueTPM();
+            } else if (column.compare("UniqueIntron_Count_Reads") == 0) {
+                return this->getUniqueReadsIntron();
+            } else if (column.compare("UniqueIntronTPM") == 0) {
+                return this->getUniqueTPMIntron();
+            } else if (column.compare("Exon_Count_Reads") == 0) {
+                return this->getExonReads();
+            } else if (column.compare("Exon_TPM") == 0) {
+                return this->getTPMExon();
+            } else if (column.compare("Intron_Count_Reads") == 0) {
+                return this->getIntronReads();
+            } else if (column.compare("Intron_TPM") == 0) {
+                return this->getTPMIntron();
+            }
+            return 0.0;
+        }
+
     private:
         int reads;
         int uniqueReads;
@@ -293,6 +318,7 @@ namespace ngs {
         int processReadsFromIsoformBAM(std::string bamFileName, std::string sample);
         std::vector<BamTools::CigarOp> processCigar(std::string cigar);
         void printResults(bool singleFile);
+        void printResultsMatrix(std::string output_name, std::vector<std::string> tpmColumns);
 
         void processReadAtGenomeLevel(std::string chrName, std::string sampleName, unsigned int start, unsigned int end);
         void processReadAtGenomeLevelUnique(std::string chrName, std::string sampleName, unsigned int start, unsigned int end);
