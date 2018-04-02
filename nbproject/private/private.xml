@@ -8,15 +8,7 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group name="KillerMutations"/>
         <group>
-            <file>file:/Users/veraalva/Work/Developer/C/ncbi/TPMCalculator/src/dnorm.c</file>
-            <file>file:/Users/veraalva/Work/Developer/C/ncbi/TPMCalculator/includes/ReadFactory.h</file>
-            <file>file:/Users/veraalva/Work/Developer/C/ncbi/TPMCalculator/src/FastaFactory.cpp</file>
-            <file>file:/Users/veraalva/Work/Developer/C/ncbi/TPMCalculator/src/ReadFactory.cpp</file>
-            <file>file:/Users/veraalva/Work/Developer/C/ncbi/TPMCalculator/src/gamma.c</file>
-            <file>file:/Users/veraalva/Work/Developer/C/ncbi/TPMCalculator/includes/Sequence.h</file>
-            <file>file:/Users/veraalva/Work/Developer/C/ncbi/TPMCalculator/includes/Global.h</file>
-            <file>file:/Users/veraalva/Work/Developer/C/ncbi/TPMCalculator/src/RandomFactory.cpp</file>
-            <file>file:/Users/veraalva/Work/Developer/C/ncbi/TPMCalculator/src/wilcox.c</file>
+            <file>file:/Users/veraalva/Work/Developer/C/ncbi/TPMCalculator/README.md</file>
         </group>
     </open-files>
 </project-private>
