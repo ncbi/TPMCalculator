@@ -26,12 +26,12 @@ To validate our software, we calculate the Pearson correlation coef-ficient betw
 and DESeq2 results for normalized expression values using RNA-Seq data of 1155 samples from 
 the TCGA-BRCA project.
 
-![Correlation Plot](https://github.com/ncbi/TPMCalculator/raw/develop/doc/Figure_1.png)
+![Correlation Plot](https://github.com/ncbi/TPMCalculator/raw/develop/doc/Figure_1.jpg)
 
 Additionally, the correlation coefficient was also calculated for the raw reads counts 
 reported by TPMCalculator and HTSeq.
 
-![Correlation Plot](https://github.com/ncbi/TPMCalculator/raw/develop/doc/Figure_2.png)
+![Correlation Plot](https://github.com/ncbi/TPMCalculator/raw/develop/doc/Figure_2.jpg)
 
 
 
