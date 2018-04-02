@@ -31,7 +31,7 @@ the TCGA-BRCA project.
 Additionally, the correlation coefficient was also calculated for the raw reads counts 
 reported by TPMCalculator and HTSeq.
 
-<img src="https://github.com/ncbi/TPMCalculator/raw/develop/doc/Figure_2.jpg" width="200" />
+<img src="https://github.com/ncbi/TPMCalculator/raw/develop/doc/Figure_2.jpg" alt="Correlation Plot"  width="888" />
 
 TPMCalculator reduces the compute time and the resource require-ments of RNA-Seq pipelines 
 by eliminating multiple steps. For example, TPMCalculator processes BAM files of size 7.0 GB 
