@@ -20,7 +20,7 @@ introns allows further identifi-cation of alternative splicing events like intro
 Additionally, a set of non-overlapped gene features (exons and introns) are generated and 
 used for TPM calculation.
 
-![Gene model](TPMCalculator/doc/Gene_model.png)
+![Gene model](https://github.com/ncbi/TPMCalculator/raw/develop/doc/Gene_model.png)
 
 
 
