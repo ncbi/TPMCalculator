@@ -1,7 +1,7 @@
 TPMCalculator
 ===
 
-TPMCalculator quantifies mRNA abundance directly from the align-ments by parsing BAM files. 
+TPMCalculator quantifies mRNA abundance directly from the alignments by parsing BAM files. 
 The input parameters are the same GTF files used to generate the alignments, and one or 
 multiple input BAM file(s) containing either single-end or paired-end sequencing reads. 
 The TPMCalculator output is comprised of four files per sample reporting the TPM values 
