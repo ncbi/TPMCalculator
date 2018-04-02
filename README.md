@@ -33,7 +33,9 @@ reported by TPMCalculator and HTSeq.
 
 ![Correlation Plot](https://github.com/ncbi/TPMCalculator/raw/develop/doc/Figure_2.jpg)
 
-
+TPMCalculator reduces the compute time and the resource require-ments of RNA-Seq pipelines 
+by eliminating multiple steps. For example, TPMCalculator processes BAM files of size 7.0 GB 
+in ~20 minutes requiring only 4GB of RAM. 
 
 ## Credits
 
