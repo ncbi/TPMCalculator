@@ -37,6 +37,8 @@ TPMCalculator reduces the compute time and the resource require-ments of RNA-Seq
 by eliminating multiple steps. For example, TPMCalculator processes BAM files of size 7.0 GB 
 in ~20 minutes requiring only 4GB of RAM. 
 
+For more detailed description of the put files see https://github.com/ncbi/TPMCalculator/wiki/TPMCalculator
+
 ## Credits
 
 Roberto Vera Alvarez
