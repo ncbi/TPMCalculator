@@ -93,7 +93,7 @@
           <incDir>
             <pElem>includes</pElem>
           </incDir>
-          <commandLine>-g -Wall</commandLine>
+          <commandLine>-g</commandLine>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>

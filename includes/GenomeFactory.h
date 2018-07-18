@@ -1098,7 +1098,7 @@ namespace genome {
         GeneMultiSetItr<T> findGeneUpperBound(std::string chrName, unsigned int start, unsigned int end) {
             GeneMultiSetItr<T> it;
             setCurrentChr(chrName);
-            SPtrGene<T> g = std::make_shared<Gene < T >> ("gene", start, end);
+            SPtrGene<T> g = std::make_shared<Gene<T>>("gene", start, end);
             it = currentChr->getGenes().lower_bound(g);
             if (it == currentChr->getGenes().end()) --it;
 
