@@ -42,13 +42,13 @@ ReadFactory::ReadFactory() {
 ReadFactory::~ReadFactory() {
 }
 
-void ReadFactory::processReadAtGenomeLevel(std::string chrName, std::string sampleName, unsigned int start, unsigned int end) {
+void ReadFactory::processReadAtGenomeLevel(std::string chrName, std::string sampleName, unsigned int start, unsigned int end, uint16_t minOverlap) {
     bool done = false;
     GeneMultiSetNGS::iterator geneIt;
     try {
         geneIt = genomeFactory.findGeneUpperBound(chrName, start, end);
         for (auto it = geneIt;; --it) {
-            this->processReadAtGeneLevel(*it, sampleName, start, end);
+            this->processReadAtGeneLevel(*it, sampleName, start, end, minOverlap);
             if (done) break;
             if (std::distance(it, geneIt) > 6 && (*it)->getEnd() < start) done = true;
             if (it == genomeFactory.getCurrentChr()->getGenes().begin()) break;
@@ -57,13 +57,13 @@ void ReadFactory::processReadAtGenomeLevel(std::string chrName, std::string samp
     }
 }
 
-void ReadFactory::processReadAtGenomeLevelUnique(std::string chrName, std::string sampleName, unsigned int start, unsigned int end) {
+void ReadFactory::processReadAtGenomeLevelUnique(std::string chrName, std::string sampleName, unsigned int start, unsigned int end, uint16_t minOverlap) {
     bool done = false;
     GeneMultiSetNGS::iterator geneIt;
     try {
         geneIt = genomeFactory.findGeneUpperBound(chrName, start, end);
         for (auto it = geneIt;; --it) {
-            this->processReadAtGeneLevelUnique(*it, sampleName, start, end);
+            this->processReadAtGeneLevelUnique(*it, sampleName, start, end, minOverlap);
             if (done) break;
             if (std::distance(it, geneIt) > 6 && (*it)->getEnd() < start) done = true;
             if (it == genomeFactory.getCurrentChr()->getGenes().begin()) break;
@@ -72,20 +72,20 @@ void ReadFactory::processReadAtGenomeLevelUnique(std::string chrName, std::strin
     }
 }
 
-void ReadFactory::processReadAtGeneLevel(SPtrGeneNGS gene, std::string sampleName, unsigned int start, unsigned int end) {
-    if (!gene->isInside(start, end, 8)) return;
+void ReadFactory::processReadAtGeneLevel(SPtrGeneNGS gene, std::string sampleName, unsigned int start, unsigned int end, uint16_t minOverlap) {
+    if (!gene->isInside(start, end, minOverlap)) return;
     if (!gene->isProcessed()) gene->setProcessed(true);
     for (auto it = gene->getIsoforms().begin(); it != gene->getIsoforms().end(); ++it) {
-        this->processReadAtIsoformLevel(*it, sampleName, start, end);
+        this->processReadAtIsoformLevel(*it, sampleName, start, end, minOverlap);
     }
 }
 
-void ReadFactory::processReadAtGeneLevelUnique(SPtrGeneNGS gene, std::string sampleName, unsigned int start, unsigned int end) {
-    if (!gene->isInside(start, end, 8)) return;
+void ReadFactory::processReadAtGeneLevelUnique(SPtrGeneNGS gene, std::string sampleName, unsigned int start, unsigned int end, uint16_t minOverlap) {
+    if (!gene->isInside(start, end, minOverlap)) return;
     if (!gene->isProcessed()) gene->setProcessed(true);
     SPtrSampleData s = gene->getData().createSampleData(sampleName);
     for (auto it = gene->getFeatures().begin(); it != gene->getFeatures().end(); ++it) {
-        if ((*it)->isInside(start, end, 8)) {
+        if ((*it)->isInside(start, end, minOverlap)) {
             (*it)->getData().increaseReads(sampleName);
             if (end > (*it)->getEnd() && it != --(gene->getFeatures().end())) {
                 s->increaseBridgeReads();
@@ -93,19 +93,19 @@ void ReadFactory::processReadAtGeneLevelUnique(SPtrGeneNGS gene, std::string sam
         }
     }
     for (auto it = gene->getUniqueFeatures().begin(); it != gene->getUniqueFeatures().end(); ++it) {
-        if ((*it)->isInside(start, end, 8)) {
+        if ((*it)->isInside(start, end, minOverlap)) {
             (*it)->getData().increaseReads(sampleName);
         }
     }
 }
 
-void ReadFactory::processReadAtIsoformLevel(SPtrIsoformNGS isoform, std::string sampleName, unsigned int start, unsigned int end) {
-    if (!isoform->isInside(start, end, 8)) return;
+void ReadFactory::processReadAtIsoformLevel(SPtrIsoformNGS isoform, std::string sampleName, unsigned int start, unsigned int end, uint16_t minOverlap) {
+    if (!isoform->isInside(start, end, minOverlap)) return;
     isoform->setProcessed(true);
     SPtrSampleData s = isoform->getData().createSampleData(sampleName);
     s->increaseReads();
     for (auto it = isoform->getFeatures().begin(); it != isoform->getFeatures().end(); ++it) {
-        if ((*it)->isInside(start, end, 8)) {
+        if ((*it)->isInside(start, end, minOverlap)) {
             (*it)->getData().increaseReads(sampleName);
             if (end > (*it)->getEnd() && it != --(isoform->getFeatures().end())) {
                 s->increaseBridgeReads();
@@ -323,7 +323,7 @@ void ReadFactory::calculateTPMperSample(std::string sampleName) {
     }
 }
 
-int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sampleName, bool onlyProperlyPaired) {
+int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sampleName, bool onlyProperlyPaired, uint16_t minMAPQ, uint16_t minOverlap) {
     BamAlignment al;
     CigarOp c;
     bool toRun;
@@ -336,7 +336,7 @@ int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sample
     references = reader.GetReferenceData();
     while (reader.GetNextAlignment(al)) {
         toRun = false;
-        if (al.IsMapped()) toRun = true;
+        if (al.IsMapped() && al.MapQuality >= minMAPQ) toRun = true;
         if (toRun && onlyProperlyPaired && !al.IsProperPair()) toRun = false;
         if (toRun) {
             string chr = references[al.RefID].RefName;
@@ -357,8 +357,8 @@ int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sample
                     len += c.Length;
                     if (c.Type == 'N') {
                         if (len >= 8) {
-                            processReadAtGenomeLevel(chr, sampleName, start, end);
-                            processReadAtGenomeLevelUnique(chr, sampleName, start, end);
+                            processReadAtGenomeLevel(chr, sampleName, start, end, minOverlap);
+                            processReadAtGenomeLevelUnique(chr, sampleName, start, end, minOverlap);
                         }
                         start = end + 1 + c.Length;
                         len = 0;
@@ -367,12 +367,12 @@ int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sample
                     }
                 }
                 if (len >= 8) {
-                    processReadAtGenomeLevel(chr, sampleName, start, end);
-                    processReadAtGenomeLevelUnique(chr, sampleName, start, end);
+                    processReadAtGenomeLevel(chr, sampleName, start, end, minOverlap);
+                    processReadAtGenomeLevelUnique(chr, sampleName, start, end, minOverlap);
                 }
             } else {
-                processReadAtGenomeLevel(chr, sampleName, al.Position, al.GetEndPosition(true, true));
-                processReadAtGenomeLevelUnique(chr, sampleName, al.Position, al.GetEndPosition(true, true));
+                processReadAtGenomeLevel(chr, sampleName, al.Position, al.GetEndPosition(true, true), minOverlap);
+                processReadAtGenomeLevelUnique(chr, sampleName, al.Position, al.GetEndPosition(true, true), minOverlap);
             }
             count++;
         }
@@ -401,7 +401,7 @@ std::vector<CigarOp> ReadFactory::processCigar(std::string cigar) {
     return cigarVec;
 }
 
-int ReadFactory::processBAMSAMFromDir(std::string dirName, bool onlyProperlyPaired) {
+int ReadFactory::processBAMSAMFromDir(std::string dirName, bool onlyProperlyPaired, uint16_t minMAPQ, uint16_t minOverlap) {
     int count = 0;
     int totalCount = 0;
     struct dirent *dp;
@@ -427,7 +427,7 @@ int ReadFactory::processBAMSAMFromDir(std::string dirName, bool onlyProperlyPair
                 samples.push_back(sampleFileName);
                 cerr.flush();
                 try {
-                    count = processReadsFromBAM(fileName, sampleFileName, onlyProperlyPaired);
+                    count = processReadsFromBAM(fileName, sampleFileName, onlyProperlyPaired, minMAPQ, minOverlap);
                     totalCount += count;
                 } catch (exceptions::NotFoundException) {
                     cerr << "Can't open file " << fileName << endl;

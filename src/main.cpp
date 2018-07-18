@@ -40,6 +40,8 @@ void print_usage(char *program_name, int exit_code) {
     cerr << "-t    Transcript key to use from GTF file. Default: transcript_id\n";
     cerr << "-c    Smaller size allowed for an intron created for genes. Default: 16. We recommend to use the reads length\n";
     cerr << "-p    Use only properly paired reads. Default: No. Recommended for paired-end reads.\n";
+    cerr << "-q    Minimum MAPQ value to filter out reads. Default: 0. This value depends on the aligner MAPQ value.\n";
+    cerr << "-o    Minimum overlap between a reads and a feature. Default: 8.\n";
     cerr << "\n********************************************************************************\n";
     cerr << "\n                        Roberto Vera Alvarez, PhD\n";
     cerr << "                      Emails: veraalva@ncbi.nlm.nih.gov\n\n";
@@ -56,6 +58,8 @@ int main(int argc, char *argv[]) {
     string geneNameKey = "gene_id";
     string transcriptNameKey = "transcript_id";
     int intronCutOff = 16;
+    uint16_t minMAPQ = 0;
+    uint16_t minOverlap = 8;
     bool onlyProperlyPaired = false;
     bool singleFile = false;
     set<string>features = {"exon"};
@@ -145,7 +149,33 @@ int main(int argc, char *argv[]) {
                     }
                     intronCutOff = atoi(argv[i]);
                 } else {
-                    cerr << "Option t require an argument" << endl;
+                    cerr << "Option c require an argument" << endl;
+                    print_usage(argv[0], -1);
+                }
+            } else if (option.compare(1, 1, "q") == 0) {
+                i++;
+                if (i < argc) {
+                    string argument(argv[i]);
+                    if (argument.compare(0, 1, "-") == 0) {
+                        cerr << "Option q require an argument" << endl;
+                        print_usage(argv[0], -1);
+                    }
+                    minMAPQ = static_cast<uint16_t> (atoi(argv[i]));
+                } else {
+                    cerr << "Option q require an argument" << endl;
+                    print_usage(argv[0], -1);
+                }
+            } else if (option.compare(1, 1, "o") == 0) {
+                i++;
+                if (i < argc) {
+                    string argument(argv[i]);
+                    if (argument.compare(0, 1, "-") == 0) {
+                        cerr << "Option o require an argument" << endl;
+                        print_usage(argv[0], -1);
+                    }
+                    minOverlap = static_cast<uint16_t> (atoi(argv[i]));
+                } else {
+                    cerr << "Option o require an argument" << endl;
                     print_usage(argv[0], -1);
                 }
             } else if (option.compare(1, 1, "p") == 0) {
@@ -180,7 +210,7 @@ int main(int argc, char *argv[]) {
         uTime.setTime();
         cerr << "Parsing BAM files" << endl;
         fflush(NULL);
-        count = readFactory.processBAMSAMFromDir(bamDirName, onlyProperlyPaired);
+        count = readFactory.processBAMSAMFromDir(bamDirName, onlyProperlyPaired, minMAPQ, minOverlap);
         cerr << count << " reads processed in " << uTime.getElapseTimeSec() << " seconds" << endl;
         fflush(NULL);
     } else if (!bamFileName.empty()) {
@@ -198,7 +228,7 @@ int main(int argc, char *argv[]) {
                 cerr << "Parsing sample: " << sampleName;
                 fflush(NULL);
                 readFactory.getSamples().push_back(sampleName);
-                count = readFactory.processReadsFromBAM(bamFileName, sampleName, onlyProperlyPaired);
+                count = readFactory.processReadsFromBAM(bamFileName, sampleName, onlyProperlyPaired, minMAPQ, minOverlap);
                 cerr << " " << count << " reads processed in " << uTime.getElapseTimeSec() << " seconds" << endl;
                 fflush(NULL);
             }

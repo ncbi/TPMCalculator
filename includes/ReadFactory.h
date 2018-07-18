@@ -313,18 +313,18 @@ namespace ngs {
             return samples;
         }
 
-        int processBAMSAMFromDir(std::string dirName, bool onlyProperlyPaired);
-        int processReadsFromBAM(std::string bamFileName, std::string sampleName, bool onlyProperlyPaired);
+        int processBAMSAMFromDir(std::string dirName, bool onlyProperlyPaired, uint16_t minMAPQ, uint16_t minOverlap);
+        int processReadsFromBAM(std::string bamFileName, std::string sampleName, bool onlyProperlyPaired, uint16_t minMAPQ, uint16_t minOverlap);
         int processReadsFromIsoformBAM(std::string bamFileName, std::string sample);
         std::vector<BamTools::CigarOp> processCigar(std::string cigar);
         void printResults(bool singleFile);
         void printResultsMatrix(std::string output_name, std::vector<std::string> tpmColumns);
 
-        void processReadAtGenomeLevel(std::string chrName, std::string sampleName, unsigned int start, unsigned int end);
-        void processReadAtGenomeLevelUnique(std::string chrName, std::string sampleName, unsigned int start, unsigned int end);
-        void processReadAtGeneLevel(SPtrGeneNGS gene, std::string sampleName, unsigned int start, unsigned int end);
-        void processReadAtGeneLevelUnique(SPtrGeneNGS gene, std::string sampleName, unsigned int start, unsigned int end);
-        void processReadAtIsoformLevel(SPtrIsoformNGS isoform, std::string sampleName, unsigned int start, unsigned int end);
+        void processReadAtGenomeLevel(std::string chrName, std::string sampleName, unsigned int start, unsigned int end, uint16_t minOverlap);
+        void processReadAtGenomeLevelUnique(std::string chrName, std::string sampleName, unsigned int start, unsigned int end, uint16_t minOverlap);
+        void processReadAtGeneLevel(SPtrGeneNGS gene, std::string sampleName, unsigned int start, unsigned int end, uint16_t minOverlap);
+        void processReadAtGeneLevelUnique(SPtrGeneNGS gene, std::string sampleName, unsigned int start, unsigned int end, uint16_t minOverlap);
+        void processReadAtIsoformLevel(SPtrIsoformNGS isoform, std::string sampleName, unsigned int start, unsigned int end, uint16_t minOverlap);
 
         void loadTPMCalculatorGenesOutput(std::string dirName);
 
