@@ -824,17 +824,17 @@ namespace genome {
             return a.s > b.s;
         };
 
-        std::set<std::pair<unsigned int, unsigned int> > getIntervals(std::shared_ptr<IsoformUnMap < T>> iMap) {
+        std::set<std::pair<unsigned int, unsigned int> > getIntervals(IsoformUnMap < T> iMap) {
             std::set<std::pair<unsigned int, unsigned int> > intervals;
-
-            coordenate_t arr[(*iMap).size()];
+            
+            int n = iMap.size();
+            coordenate_t arr[n];
             int index = 0;
-            for (auto iIt : *(iMap)) {
+            for (auto iIt : iMap) {
                 SPtrIsoform<T> i = iIt.second;
                 arr[index].s = i->getStart();
                 arr[index++].e = i->getEnd();
             }
-            int n = sizeof (arr) / sizeof (arr[0]);
 
             // Sort Intervals in decreasing order of
             // start time    
@@ -870,7 +870,7 @@ namespace genome {
             for (auto gIt : geneIsoforms) {
                 std::string geneName = gIt.first;
                 std::shared_ptr<IsoformUnMap < T>> iMap = gIt.second;
-                std::set< std::pair<unsigned int, unsigned int>> unique_coords = getIntervals(iMap);
+                std::set< std::pair<unsigned int, unsigned int>> unique_coords = getIntervals(*iMap);
 
                 if (unique_coords.size() == 1) {
                     SPtrIsoform<T> i = iMap->begin()->second;
@@ -1127,7 +1127,7 @@ namespace genome {
             SPtrGene<T> g = std::make_shared<Gene < T >> ("gene", start, end);
             it = currentChr->getGenes().lower_bound(g);
             if (it == currentChr->getGenes().end()) --it;
-
+            
             return it;
         }
 
