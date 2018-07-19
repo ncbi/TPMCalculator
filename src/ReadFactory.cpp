@@ -334,6 +334,7 @@ int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sample
     }
     header = reader.GetHeader();
     references = reader.GetReferenceData();
+    fprintf(stderr, "\n");
     while (reader.GetNextAlignment(al)) {
         toRun = false;
         if (al.IsMapped() && al.MapQuality >= minMAPQ) toRun = true;
@@ -356,7 +357,7 @@ int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sample
                     c = *it;
                     len += c.Length;
                     if (c.Type == 'N') {
-                        if (len >= 8) {
+                        if (len >= minOverlap) {
                             processReadAtGenomeLevel(chr, sampleName, start, end, minOverlap);
                             processReadAtGenomeLevelUnique(chr, sampleName, start, end, minOverlap);
                         }
@@ -366,7 +367,7 @@ int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sample
                         end = start + len - 1;
                     }
                 }
-                if (len >= 8) {
+                if (len >= minOverlap) {
                     processReadAtGenomeLevel(chr, sampleName, start, end, minOverlap);
                     processReadAtGenomeLevelUnique(chr, sampleName, start, end, minOverlap);
                 }
@@ -376,7 +377,9 @@ int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sample
             }
             count++;
         }
+        fprintf(stderr, "\tReads processed: %12d\r", count);
     }
+    fprintf(stderr, "\tReads processed: %12d\n", count);
 
     reader.Close();
 
@@ -1019,7 +1022,7 @@ void ReadFactory::loadTPMCalculatorGenesOutput(std::string dirName) {
                                     s->increaseIntronLength(atoi(fParser.getWords()[14].c_str()));
                                     s->increaseIntronReads(atoi(fParser.getWords()[15].c_str()));
                                     s->setTPMIntron(atof(fParser.getWords()[16].c_str()));
-                                }else{
+                                } else {
                                     s->increaseExonLength(atoi(fParser.getWords()[5].c_str()));
                                     s->increaseExonReads(atoi(fParser.getWords()[6].c_str()));
                                     s->setTPMExon(atof(fParser.getWords()[7].c_str()));
