@@ -17,116 +17,52 @@ namespace ngs {
     public:
 
         SampleData() {
-            this->TPM = 0.0;
-            this->uniqueTPM = 0.0;
-            this->uniqueTPMIntron = 0.0;
-            this->uniqueReads = 0;
-            this->uniqueLength = 0;
-            this->uniqueReadsIntron = 0;
-            this->uniqueIntronLength = 0;
-            this->TPMExon = 0.0;
-            this->TPMIntron = 0.0;
-            this->exonReads = 0;
-            this->exonLength = 0;
-            this->intronReads = 0;
-            this->intronLength = 0;
             this->reads = 0;
-            this->TPMBridges = 0.0;
-            this->bridgeReads = 0;
+            this->TPM = 0.0;
+
+            this->exonReads = 0;
+            this->exonTPM = 0.0;
+
+            this->intronReads = 0;
+            this->intronTPM = 0.0;
+
+            this->uniqueReads = 0;
+            this->uniqueTPM = 0.0;
+
+            this->uniqueExonReads = 0;
+            this->uniqueExonTPM = 0.0;
+
+            this->uniqueIntronReads = 0;
+            this->uniqueIntronTPM = 0.0;
+
+            this->bridgesReads = 0;
+            this->bridgesTPM = 0.0;
         }
 
         SampleData(int reads) {
-            this->TPM = 0.0;
-            this->uniqueTPM = 0.0;
-            this->uniqueTPMIntron = 0.0;
-            this->uniqueReads = 0;
-            this->uniqueLength = 0;
-            this->uniqueReadsIntron = 0;
-            this->uniqueIntronLength = 0;
-            this->TPMExon = 0.0;
-            this->TPMIntron = 0.0;
-            this->exonReads = 0;
-            this->exonLength = 0;
-            this->intronReads = 0;
-            this->intronLength = 0;
             this->reads = reads;
-            this->TPMBridges = 0.0;
-            this->bridgeReads = 0;
+            this->TPM = 0.0;
+
+            this->exonReads = 0;
+            this->exonTPM = 0.0;
+
+            this->intronReads = 0;
+            this->intronTPM = 0.0;
+
+            this->uniqueReads = 0;
+            this->uniqueTPM = 0.0;
+
+            this->uniqueExonReads = 0;
+            this->uniqueExonTPM = 0.0;
+
+            this->uniqueIntronReads = 0;
+            this->uniqueIntronTPM = 0.0;
+
+            this->bridgesReads = 0;
+            this->bridgesTPM = 0.0;
         }
 
         virtual ~SampleData() {
-        }
-
-        double getTPM() const {
-            return TPM;
-        }
-
-        void setTPM(double TPM) {
-            this->TPM = TPM;
-        }
-
-        double getUniqueTPM() const {
-            return uniqueTPM;
-        }
-
-        void setUniqueTPM(double uniqueTPM) {
-            this->uniqueTPM = uniqueTPM;
-        }
-
-        double getUniqueTPMIntron() const {
-            return uniqueTPMIntron;
-        }
-
-        void setUniqueTPMIntron(double uniqueTPMIntron) {
-            this->uniqueTPMIntron = uniqueTPMIntron;
-        }
-
-        double getTPMExon() const {
-            return TPMExon;
-        }
-
-        void setTPMExon(double TPMExon) {
-            this->TPMExon = TPMExon;
-        }
-
-        double getTPMIntron() const {
-            return TPMIntron;
-        }
-
-        void setTPMIntron(double TPMIntron) {
-            this->TPMIntron = TPMIntron;
-        }
-
-        int getExonReads() const {
-            return exonReads;
-        }
-
-        void increaseExonReads(int exonCount) {
-            this->exonReads += exonCount;
-        }
-
-        int getExonLength() const {
-            return exonLength;
-        }
-
-        void increaseExonLength(int exonLength) {
-            this->exonLength += exonLength;
-        }
-
-        int getIntronReads() const {
-            return intronReads;
-        }
-
-        void increaseIntronReads(int intronCount) {
-            this->intronReads += intronCount;
-        }
-
-        int getIntronLength() const {
-            return intronLength;
-        }
-
-        void increaseIntronLength(int intronLength) {
-            this->intronLength += intronLength;
         }
 
         int getReads() const {
@@ -141,6 +77,62 @@ namespace ngs {
             this->reads += reads;
         }
 
+        double getTPM() const {
+            return TPM;
+        }
+
+        void setTPM(double TPM) {
+            this->TPM = TPM;
+        }
+
+        int getExonReads() const {
+            return exonReads;
+        }
+
+        void increaseExonReads() {
+            this->exonReads++;
+        }
+
+        void increaseExonReads(int exonCount) {
+            this->exonReads += exonCount;
+        }
+
+        double getExonTPM() const {
+            return exonTPM;
+        }
+
+        void setExonTPM(double exonTPM) {
+            this->exonTPM = exonTPM;
+        }
+
+        int getIntronReads() const {
+            return intronReads;
+        }
+
+        void increaseIntronReads(int intronCount) {
+            this->intronReads += intronCount;
+        }
+
+        void increaseIntronReads() {
+            this->intronReads++;
+        }
+
+        double getIntronTPM() const {
+            return intronTPM;
+        }
+
+        void setIntronTPM(double intronTPM) {
+            this->intronTPM = intronTPM;
+        }
+
+        double getUniqueTPM() const {
+            return uniqueTPM;
+        }
+
+        void setUniqueTPM(double uniqueTPM) {
+            this->uniqueTPM = uniqueTPM;
+        }
+
         int getUniqueReads() const {
             return uniqueReads;
         }
@@ -153,100 +145,117 @@ namespace ngs {
             this->uniqueReads += uniqueReads;
         }
 
-        int getUniqueReadsIntron() const {
-            return uniqueReadsIntron;
+        int getUniqueExonReads() {
+            return uniqueExonReads;
         }
 
-        void increaseUniqueReadsIntron() {
-            this->uniqueReadsIntron++;
+        void increaseUniqueExonReads() {
+            this->uniqueExonReads++;
         }
 
-        void increaseUniqueReadsIntron(int uniqueReadsIntron) {
-            this->uniqueReadsIntron += uniqueReadsIntron;
+        void increaseUniqueExonReads(int uniqueReadsExon) {
+            this->uniqueExonReads += uniqueReadsExon;
         }
 
-        int getUniqueIntronLength() const {
-            return uniqueIntronLength;
+        double getUniqueExonTPM() const {
+            return uniqueExonTPM;
         }
 
-        void setUniqueIntronLength(int uniqueIntronLength) {
-            this->uniqueIntronLength = uniqueIntronLength;
+        void setUniqueExonTPM(double uniqueExonTPM) {
+            this->uniqueExonTPM = uniqueExonTPM;
         }
 
-        void increaseUniqueIntronLength(int uniqueIntronLength) {
-            this->uniqueIntronLength += uniqueIntronLength;
+        int getUniqueIntronReads() const {
+            return uniqueIntronReads;
         }
 
-        int getUniqueLength() const {
-            return uniqueLength;
+        void increaseUniqueIntronReads() {
+            this->uniqueIntronReads++;
         }
 
-        void setUniqueLength(int uniqueLength) {
-            this->uniqueLength = uniqueLength;
+        void increaseUniqueIntronReads(int uniqueReadsIntron) {
+            this->uniqueIntronReads += uniqueReadsIntron;
         }
 
-        void increaseUniqueLength(int uniqueLength) {
-            this->uniqueLength += uniqueLength;
+        double getUniqueIntronTPM() const {
+            return uniqueIntronTPM;
         }
 
-        float getTPMBridges() const {
-            return TPMBridges;
+        void setUniqueIntronTPM(double uniqueIntronTPM) {
+            this->uniqueIntronTPM = uniqueIntronTPM;
         }
 
-        void setTPMBridges(float TPMBridges) {
-            this->TPMBridges = TPMBridges;
+        int getBridgesReads() const {
+            return bridgesReads;
         }
 
-        int getBridgeReads() const {
-            return bridgeReads;
+        void increaseBridgesReads() {
+            this->bridgesReads++;
         }
 
-        void increaseBridgeReads() {
-            this->bridgeReads++;
+        double getBridgesTPM() const {
+            return bridgesTPM;
+        }
+
+        void setBridgesTPM(double bridgesTPM) {
+            this->bridgesTPM = bridgesTPM;
         }
 
         double getValueFromColumn(std::string column) {
-            if (column.compare("Count_Reads") == 0) {
+            if (column.compare("Reads") == 0) {
                 return this->getReads();
             } else if (column.compare("TPM") == 0) {
                 return this->getTPM();
-            } else if (column.compare("Unique_Count_Reads") == 0) {
+            } else if (column.compare("ExonReads") == 0) {
+                return this->getExonReads();
+            } else if (column.compare("ExonTPM") == 0) {
+                return this->getExonTPM();
+            } else if (column.compare("IntronReads") == 0) {
+                return this->getIntronReads();
+            } else if (column.compare("IntronTPM") == 0) {
+                return this->getIntronTPM();
+            } else if (column.compare("UniqueReads") == 0) {
                 return this->getUniqueReads();
             } else if (column.compare("UniqueTPM") == 0) {
                 return this->getUniqueTPM();
-            } else if (column.compare("UniqueIntron_Count_Reads") == 0) {
-                return this->getUniqueReadsIntron();
+            } else if (column.compare("UniqueExonReads") == 0) {
+                return this->getUniqueExonReads();
+            } else if (column.compare("UniqueExonTPM") == 0) {
+                return this->getUniqueExonTPM();
+            } else if (column.compare("UniqueIntronReads") == 0) {
+                return this->getUniqueIntronReads();
             } else if (column.compare("UniqueIntronTPM") == 0) {
-                return this->getUniqueTPMIntron();
-            } else if (column.compare("Exon_Count_Reads") == 0) {
-                return this->getExonReads();
-            } else if (column.compare("Exon_TPM") == 0) {
-                return this->getTPMExon();
-            } else if (column.compare("Intron_Count_Reads") == 0) {
-                return this->getIntronReads();
-            } else if (column.compare("Intron_TPM") == 0) {
-                return this->getTPMIntron();
+                return this->getUniqueIntronTPM();
+            } else if (column.compare("BridgesReads") == 0) {
+                return this->getBridgesReads();
+            } else if (column.compare("BridgesTPM") == 0) {
+                return this->getBridgesTPM();
             }
             return 0.0;
         }
 
     private:
         int reads;
-        int uniqueReads;
-        int uniqueLength;
-        int uniqueReadsIntron;
-        int uniqueIntronLength;
         double TPM;
-        double uniqueTPM;
-        double uniqueTPMIntron;
-        int exonLength;
+
         int exonReads;
+        double exonTPM;
+
         int intronReads;
-        int intronLength;
-        double TPMExon;
-        double TPMIntron;
-        float TPMBridges;
-        int bridgeReads;
+        double intronTPM;
+
+        int uniqueReads;
+        double uniqueTPM;
+
+        int uniqueExonReads;
+        double uniqueExonTPM;
+
+        int uniqueIntronReads;
+        double uniqueIntronTPM;
+
+        int bridgesReads;
+        float bridgesTPM;
+
     };
 
     typedef std::shared_ptr<SampleData> SPtrSampleData;
@@ -313,18 +322,24 @@ namespace ngs {
             return samples;
         }
 
+        struct coordinateLessCMP {
+
+            bool operator()(const std::pair<unsigned int, unsigned int> a, const std::pair<unsigned int, unsigned int> b) {
+                return a.first < b.first;
+            }
+        };
+
         int processBAMSAMFromDir(std::string dirName, bool onlyProperlyPaired, uint16_t minMAPQ, uint16_t minOverlap);
         int processReadsFromBAM(std::string bamFileName, std::string sampleName, bool onlyProperlyPaired, uint16_t minMAPQ, uint16_t minOverlap);
-        int processReadsFromIsoformBAM(std::string bamFileName, std::string sample);
         std::vector<BamTools::CigarOp> processCigar(std::string cigar);
         void printResults(bool singleFile);
         void printResultsMatrix(std::string output_name, std::vector<std::string> tpmColumns);
 
-        void processReadAtGenomeLevel(std::string chrName, std::string sampleName, unsigned int start, unsigned int end, uint16_t minOverlap);
-        void processReadAtGenomeLevelUnique(std::string chrName, std::string sampleName, unsigned int start, unsigned int end, uint16_t minOverlap);
-        void processReadAtGeneLevel(SPtrGeneNGS gene, std::string sampleName, unsigned int start, unsigned int end, uint16_t minOverlap);
-        void processReadAtGeneLevelUnique(SPtrGeneNGS gene, std::string sampleName, unsigned int start, unsigned int end, uint16_t minOverlap);
-        void processReadAtIsoformLevel(SPtrIsoformNGS isoform, std::string sampleName, unsigned int start, unsigned int end, uint16_t minOverlap);
+        void processReadAtGenomeLevel(std::string chrName, std::string sampleName, std::set < std::pair<unsigned int, unsigned int>, coordinateLessCMP> read_coords, uint16_t minOverlap);
+        //        void processReadAtGenomeLevelUnique(std::string chrName, std::string sampleName, unsigned int start, unsigned int end, uint16_t minOverlap);
+        void processReadAtGeneLevel(SPtrGeneNGS gene, std::string sampleName, std::set < std::pair<unsigned int, unsigned int>, coordinateLessCMP> read_coords, uint16_t minOverlap);
+        //        void processReadAtGeneLevelUnique(SPtrGeneNGS gene, std::string sampleName, unsigned int start, unsigned int end, uint16_t minOverlap);
+        //        void processReadAtIsoformLevel(SPtrIsoformNGS isoform, std::string sampleName, unsigned int start, unsigned int end, uint16_t minOverlap);
 
         void loadTPMCalculatorGenesOutput(std::string dirName);
 
@@ -342,7 +357,7 @@ namespace ngs {
         //void processReadAtGenomeLevel(std::string chrName, std::string sampleName, unsigned int start, unsigned int end);
         //        void processReadAtGeneLevel(std::shared_ptr<genome::Gene<ReadData>> gene, std::string sampleName, unsigned int start, unsigned int end);
         //        void processReadAtIsoformLevel(std::shared_ptr<genome::Isoform<ReadData>> isoform, std::string sampleName, unsigned int start, unsigned int end);
-        void PopulateReads(std::string sampleName);
+        //        void PopulateReads(std::string sampleName);
     };
 }
 
