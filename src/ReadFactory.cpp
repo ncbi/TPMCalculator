@@ -345,30 +345,22 @@ int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sample
     header = reader.GetHeader();
     references = reader.GetReferenceData();
     fprintf(stderr, "\n");
-    while (reader.GetNextAlignment(al)) {
-        toRun = false;
-        if (al.IsMapped() && al.MapQuality >= minMAPQ) toRun = true;
-        if (toRun && onlyProperlyPaired && !al.IsProperPair()) toRun = false;
-        if (toRun) {
-            string chr = references[al.RefID].RefName;
-            start = end = al.Position;
-            toRun = false;
-            for (auto it = al.CigarData.begin(); it != al.CigarData.end(); ++it) {
-                c = *it;
-                if (c.Type == 'N') {
-                    toRun = true;
-                    break;
-                }
-            }
-            std::set < std::pair<unsigned int, unsigned int>, ReadFactory::coordinateLessCMP> read_coords;
+    while (reader.GetNextAlignment(al)) {        
+        if (al.IsMapped() && al.MapQuality >= minMAPQ && !al.IsFailedQC()) {
+            toRun = true;
+            if (onlyProperlyPaired && !al.IsProperPair()) toRun = false;
             if (toRun) {
+                std::set < std::pair<unsigned int, unsigned int>, coordinateLessCMP> read_coords;
+                string chr = references[al.RefID].RefName;
+                // al.Position position (0-based) where alignment starts (from Bamtools)
+                start = end = al.Position;
                 len = 0;
                 start = al.Position;
-                for (auto it = al.CigarData.begin(); it != al.CigarData.end(); ++it) {
-                    c = *it;
-                    len += c.Length;
+                for (CigarOp c : al.CigarData) {
+                    if (c.Type != 'S' && c.Type != 'H' && c.Type != 'P')
+                        len += c.Length;
                     if (c.Type == 'N') {
-                        if (len >= minOverlap) {
+                        if (end - start + 1 >= minOverlap) {
                             read_coords.insert(std::make_pair(start, end));
                         }
                         start = end + 1 + c.Length;
@@ -377,23 +369,19 @@ int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sample
                         end = start + len - 1;
                     }
                 }
-                if (len >= minOverlap) {
+                if (end - start + 1 >= minOverlap) {
                     read_coords.insert(std::make_pair(start, end));
-
                 }
-            } else {
-                read_coords.insert(std::make_pair(al.Position, al.GetEndPosition(true, true)));
+                processReadAtGenomeLevel(chr, sampleName, read_coords, minOverlap);
+                count++;
+                fprintf(stderr, "\tReads processed: %12d\r", count);
             }
-            processReadAtGenomeLevel(chr, sampleName, read_coords, minOverlap);
-            count++;
         }
-        fprintf(stderr, "\tReads processed: %12d\r", count);
     }
     fprintf(stderr, "\tReads processed: %12d\n", count);
 
     reader.Close();
 
-    //    PopulateReads(sampleName);
     calculateTPMperSample(sampleName);
     return count;
 }
