@@ -46,12 +46,14 @@ void ReadFactory::processReadAtGenomeLevel(std::string chrName, std::string samp
     bool done = false;
     GeneMultiSetNGS::iterator geneIt;
     try {
-        geneIt = genomeFactory.findGeneUpperBound(chrName, read_coords.rbegin()->first, read_coords.rbegin()->second);
-        for (auto it = geneIt;; --it) {
-            this->processReadAtGeneLevel(*it, sampleName, read_coords, minOverlap);
-            if (done) break;
-            if (std::distance(it, geneIt) > 6 && (*it)->getEnd() < (*read_coords.begin()).first) done = true;
-            if (it == genomeFactory.getCurrentChr()->getGenes().begin()) break;
+        if (!read_coords.empty()) {
+            geneIt = genomeFactory.findGeneUpperBound(chrName, read_coords.rbegin()->first, read_coords.rbegin()->second);
+            for (auto it = geneIt;; --it) {
+                this->processReadAtGeneLevel(*it, sampleName, read_coords, minOverlap);
+                if (done) break;
+                if (std::distance(it, geneIt) > 6 && (*it)->getEnd() < (*read_coords.begin()).first) done = true;
+                if (it == genomeFactory.getCurrentChr()->getGenes().begin()) break;
+            }
         }
     } catch (exceptions::NotFoundException) {
     }
