@@ -345,7 +345,7 @@ int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sample
     header = reader.GetHeader();
     references = reader.GetReferenceData();
     fprintf(stderr, "\n");
-    while (reader.GetNextAlignment(al)) {        
+    while (reader.GetNextAlignment(al)) {
         if (al.IsMapped() && al.MapQuality >= minMAPQ && !al.IsFailedQC()) {
             toRun = true;
             if (onlyProperlyPaired && !al.IsProperPair()) toRun = false;
@@ -372,9 +372,11 @@ int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sample
                 if (end - start + 1 >= minOverlap) {
                     read_coords.insert(std::make_pair(start, end));
                 }
-                processReadAtGenomeLevel(chr, sampleName, read_coords, minOverlap);
-                count++;
-                fprintf(stderr, "\tReads processed: %12d\r", count);
+                if (!read_coords.empty()) {
+                    processReadAtGenomeLevel(chr, sampleName, read_coords, minOverlap);
+                    count++;
+                    fprintf(stderr, "\tReads processed: %12d\r", count);
+                }
             }
         }
     }
