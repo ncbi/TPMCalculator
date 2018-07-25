@@ -126,6 +126,7 @@ void ReadFactory::processReadAtGeneLevel(SPtrGeneNGS gene, std::string sampleNam
     // Assigning reads to isoforms and features
     for (auto it = gene->getIsoforms().begin(); it != gene->getIsoforms().end(); ++it) {
         SPtrIsoformNGS isoform = *it;
+        if (!isoform->isProcessed()) isoform->setProcessed(true);
         bool countedIsoform = false;
         bool countedIsoformExon = false;
         bool countedIsoformIntron = false;
@@ -135,7 +136,7 @@ void ReadFactory::processReadAtGeneLevel(SPtrGeneNGS gene, std::string sampleNam
             unsigned int end = coordIt->second;
             if (isoform->isInside(start, end, minOverlap)) {
                 SPtrSampleData sI = isoform->getData().createSampleData(sampleName);
-                if (!countedIsoform) {
+                if (!countedIsoform) {                    
                     sI->increaseReads();
                     countedIsoform = true;
                 }
