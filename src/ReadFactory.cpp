@@ -378,13 +378,10 @@ int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sample
                 if (!read_coords.empty()) {
                     processReadAtGenomeLevel(chr, sampleName, read_coords, minOverlap);
                     count++;
-                    fprintf(stderr, "\tReads processed: %12d\r", count);
                 }
             }
         }
     }
-    fprintf(stderr, "\tReads processed: %12d\n", count);
-
     reader.Close();
 
     calculateTPMperSample(sampleName);
