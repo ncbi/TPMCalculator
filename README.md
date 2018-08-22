@@ -7,6 +7,53 @@ multiple input BAM file(s) containing either single-end or paired-end sequencing
 The TPMCalculator output is comprised of four files per sample reporting the TPM values 
 and raw read counts for genes, transcripts, exons and introns respectively.
 
+## Requirements
+
+### BAMTools
+
+Clone the BAMTools repository from GitHub: https://github.com/pezmaster31/bamtools
+
+Compile it on this way and set the environment variables for TPMCalculator:
+
+    cd bamtools
+    mkdir build
+    cd build
+    cmake ..
+    make
+    cd ..
+    export BAMTOOLS_DIR=`pwd`
+    export CPPFLAGS="-I $BAMTOOLS_DIR/include"
+    export LDFLAGS="-L $BAMTOOLS_DIR/lib -Wl,-rpath,$BAMTOOLS_DIR/lib"
+
+That's it. BAMTools was compiled and the env variables were set for compiling
+TPMCalculator.
+
+## Installation
+
+After the installation of BAMTools go to the TPMCalculator folder and do make:
+
+    make
+
+A bin folder will be created with the TPMCalculator executable.
+
+## Usage
+
+Usage: ./bin/TPMCalculator -g GTF_file [-d BAM_files_directory|-i BAM_file] 
+
+    ./bin/TPMCalculator options:
+
+    -v    Print info
+    -h    Display this usage information.
+    -g    GTF file
+    -d    Directory with the BAM files
+    -b    BAM file
+    -k    Gene key to use from GTF file. Default: gene_id
+    -t    Transcript key to use from GTF file. Default: transcript_id
+    -c    Smaller size allowed for an intron created for genes. Default: 16. We recommend using the reads length
+    -p    Use only properly paired reads. Default: No. Recommended for paired-end reads.
+
+## Description
+
 The model to describe the genomic features used for a gene is created from the GTF provided 
 by the user. TPMCalculator performs two transformations which are executed on the genomic 
 coordinates generating regions for the genes that include the exons and “pure” intron 
@@ -20,18 +67,19 @@ introns allows further identification of alternative splicing events like intron
 Additionally, a set of non-overlapped gene features (exons and introns) are generated and 
 used for TPM calculation.
 
-![Gene model](https://github.com/ncbi/TPMCalculator/raw/develop/doc/Gene_model.png)
+![Gene model](https://github.com/ncbi/TPMCalculator/raw/master/doc/Gene_model.png)
 
-To validate our software, we calculate the Pearson correlation coefficient between TPM, FPKM 
-and DESeq2 results for normalized expression values using RNA-Seq data of 1155 samples from 
+To validate our software, we calculate the Pearson correlation coefficient between TPM and FPKM 
+for normalized expression values using RNA-Seq data of 1,256 samples from 
 the TCGA-BRCA project.
 
-![Correlation Plot](https://github.com/ncbi/TPMCalculator/raw/develop/doc/Figure_1.jpg)
+![Correlation Plot](https://github.com/ncbi/TPMCalculator/raw/master/doc/TPMCalculator_RSeQC.png)
 
 Additionally, the correlation coefficient was also calculated for the raw read counts 
-reported by TPMCalculator and HTSeq.
+reported by TPMCalculator, HTSeq and featureCounts.
 
-<img src="https://github.com/ncbi/TPMCalculator/raw/develop/doc/Figure_2.jpg" alt="Correlation Plot"  width="888" />
+<img src="https://github.com/ncbi/TPMCalculator/raw/master/doc/TPMCalculator_HTSEq.png" alt="Correlation Plot"  width="888" />
+<img src="https://github.com/ncbi/TPMCalculator/raw/master/doc/TPMCalculator_featureCounts.png" alt="Correlation Plot"  width="888" />
 
 TPMCalculator reduces the compute time and the resource requirements of RNA-Seq pipelines 
 by eliminating multiple steps. For example, TPMCalculator processes BAM files of size 7.0 GB 
