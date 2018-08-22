@@ -42,15 +42,17 @@ Usage: ./bin/TPMCalculator -g GTF_file [-d BAM_files_directory|-i BAM_file]
 
     ./bin/TPMCalculator options:
 
-    -v    Print info
-    -h    Display this usage information.
-    -g    GTF file
-    -d    Directory with the BAM files
-    -b    BAM file
-    -k    Gene key to use from GTF file. Default: gene_id
-    -t    Transcript key to use from GTF file. Default: transcript_id
-    -c    Smaller size allowed for an intron created for genes. Default: 16. We recommend using the reads length
-    -p    Use only properly paired reads. Default: No. Recommended for paired-end reads.
+        -v    Print info
+        -h    Display this usage information.
+        -g    GTF file
+        -d    Directory with the BAM files
+        -b    BAM file
+        -k    Gene key to use from GTF file. Default: gene_id
+        -t    Transcript key to use from GTF file. Default: transcript_id
+        -c    Smaller size allowed for an intron created for genes. Default: 16. We recommend to use the reads length
+        -p    Use only properly paired reads. Default: No. Recommended for paired-end reads.
+        -q    Minimum MAPQ value to filter out reads. Default: 0. This value depends on the aligner MAPQ value.
+        -o    Minimum overlap between a reads and a feature. Default: 8.
 
 ## Description
 
