@@ -85,6 +85,10 @@ reported by TPMCalculator, HTSeq and featureCounts.
 <img src="https://github.com/ncbi/TPMCalculator/raw/master/doc/TPMCalculator_HTSEq.png" alt="Correlation Plot"  width="888" />
 <img src="https://github.com/ncbi/TPMCalculator/raw/master/doc/TPMCalculator_featureCounts.png" alt="Correlation Plot"  width="888" />
 
+### Table S3: Correlation coefficient between TPMCalculator and the three tools for the samples with low correlation at least for one tool. Color scale: green high correlation and white low correlation
+
+<img src="https://github.com/ncbi/TPMCalculator/raw/master/doc/TableS3.png" alt="Correlation Plot"  width="888" />
+
 TPMCalculator reduces the compute time and the resource requirements of RNA-Seq pipelines 
 by eliminating multiple steps. For example, TPMCalculator processes BAM files of size 7.0 GB 
 in ~20 minutes requiring only 4GB of RAM. 
