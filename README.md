@@ -71,6 +71,8 @@ used for TPM calculation.
 
 ![Gene model](https://github.com/ncbi/TPMCalculator/raw/master/doc/Gene_model.png)
 
+## Validation
+
 To validate our software, we calculate the Pearson correlation coefficient between TPM and FPKM 
 for normalized expression values using RNA-Seq data of 1,256 samples from 
 the TCGA-BRCA project.
