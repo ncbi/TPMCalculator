@@ -26,12 +26,12 @@ ENV LDFLAGS="-L $BAMTOOLS_DIR/lib/bamtools -Wl,-rpath,$BAMTOOLS_DIR/lib/bamtools
 
 USER root
 
-#RUN apt-get clean all && \
-#    apt-get update && \
-#    apt-get -y upgrade && \
-#    apt-get clean && \
-#    apt-get purge && \
-#    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
+RUN apt-get clean all && \
+    apt-get update && \
+    apt-get -y upgrade && \
+    apt-get clean && \
+    apt-get purge && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
 
 RUN cd $DST && \
         git clone $BAMTOOLS_URL && \
