@@ -65,8 +65,10 @@
       <itemPath>Makefile</itemPath>
     </logicalFolder>
     <itemPath>.gitignore</itemPath>
+    <itemPath>Dockerfile</itemPath>
     <itemPath>LICENSE</itemPath>
     <itemPath>README.md</itemPath>
+    <itemPath>tpmcalculator.cwl</itemPath>
   </logicalFolder>
   <sourceRootList>
     <Elem>src</Elem>
@@ -118,6 +120,8 @@
         </linkerTool>
       </compileType>
       <item path=".gitignore" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Dockerfile" ex="false" tool="3" flavor2="0">
       </item>
       <item path="LICENSE" ex="false" tool="3" flavor2="0">
       </item>
@@ -202,6 +206,8 @@
       <item path="src/sunif.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/wilcox.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="tpmcalculator.cwl" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
   </confs>
