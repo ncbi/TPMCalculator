@@ -36,6 +36,21 @@ After the installation of BAMTools go to the TPMCalculator folder and do make:
 
 A bin folder will be created with the TPMCalculator executable.
 
+## Docker
+
+Use provided [Dockerfile](https://raw.githubusercontent.com/ncbi/TPMCalculator/master/Dockerfile) 
+based on the [BioContainers](https://biocontainers.pro/) base image.
+
+    docker build -t biocontainers/tpmcalculator:0.0.1 https://raw.githubusercontent.com/ncbi/TPMCalculator/master/Dockerfile
+
+## [CWL](https://github.com/common-workflow-language)
+
+A CWL tool definition is also provided [tpmcalculator.cwl](https://raw.githubusercontent.com/ncbi/TPMCalculator/master/tpmcalculator.cwl)
+
+Use it like this:
+
+    cwl-runner tpmcalculator.cwl --out_stderr=test.stderr --out_stdout=test.stdout -g genes.gtf -b sample_1.bam
+
 ## Usage
 
 Usage: ./bin/TPMCalculator -g GTF_file [-d BAM_files_directory|-i BAM_file] 
@@ -53,6 +68,7 @@ Usage: ./bin/TPMCalculator -g GTF_file [-d BAM_files_directory|-i BAM_file]
         -p    Use only properly paired reads. Default: No. Recommended for paired-end reads.
         -q    Minimum MAPQ value to filter out reads. Default: 0. This value depends on the aligner MAPQ value.
         -o    Minimum overlap between a reads and a feature. Default: 8.
+        -e    Extended output. This will include transcript level TPM values. Default: No.
 
 ## Description
 
