@@ -43,6 +43,8 @@ based on the [BioContainers](https://biocontainers.pro/) base image.
 
     docker build -t biocontainers/tpmcalculator:0.0.1 https://raw.githubusercontent.com/ncbi/TPMCalculator/master/Dockerfile
 
+    docker run -v /path_to_data:/data --user=yourUID:your:GID biocontainers/tpmcalculator:0.0.1 TPMCalculator -g /data/path_to_GTF/genes.gtf -b /data/path_to_bam/sample1.bam
+
 ## [CWL](https://github.com/common-workflow-language)
 
 A CWL tool definition is also provided [tpmcalculator.cwl](https://raw.githubusercontent.com/ncbi/TPMCalculator/master/tpmcalculator.cwl)
