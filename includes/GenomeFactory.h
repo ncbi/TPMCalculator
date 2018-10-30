@@ -15,6 +15,7 @@
 
 #include "TextParser.h"
 #include "bstring.h"
+#include "Exceptions.h"
 
 
 namespace genome {
@@ -885,7 +886,9 @@ namespace genome {
                         if (!segments.empty()) {
                             g->getUniqueFeatures().insert(segments.begin(), segments.end());
                         } else {
-                            g->getUniqueFeatures().insert(f);
+                            SPtrFeature<T> ff = std::make_shared<Feature < T >> (f->getType(), f->getStart(), f->getEnd());
+                            ff->setStrand(f->getStrand());
+                            g->getUniqueFeatures().insert(ff);
                         }
                     }
                 }
@@ -1249,7 +1252,8 @@ namespace genome {
                         try {
                             currentChr->processGTFLine(fParser.getWords(), geneIdKey, isoformIdKey);
                         } catch (exceptions::NotFoundException ex) {
-                            std::cerr << fParser.getLine() << std::endl;
+                            std::cerr << ex.what() << std::endl;
+                            std::cerr << "Error processing GTF line at Chromosome level:\n" +  fParser.getLine() << std::endl;
                             exit(-1);
                         }
                     }
