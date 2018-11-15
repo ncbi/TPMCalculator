@@ -18,12 +18,13 @@ Compile it on this way and set the environment variables for TPMCalculator:
     cd bamtools
     mkdir build
     cd build
-    cmake ..
+    cmake -DCMAKE_INSTALL_PREFIX=../ ..
     make
+    make install
     cd ..
     export BAMTOOLS_DIR=`pwd`
-    export CPPFLAGS="-I $BAMTOOLS_DIR/include"
-    export LDFLAGS="-L $BAMTOOLS_DIR/lib -Wl,-rpath,$BAMTOOLS_DIR/lib"
+    export CPPFLAGS="-I $BAMTOOLS_DIR/include/bamtools/"
+    export LDFLAGS="-L $BAMTOOLS_DIR/lib64 -Wl,-rpath,$BAMTOOLS_DIR/lib64"
 
 That's it. BAMTools was compiled and the env variables were set for compiling
 TPMCalculator.
