@@ -92,8 +92,8 @@ used for TPM calculation.
 
 ## Validation
 
-* [UCSC hg19](Validation#validation-using-ucsc-hg19-genome-annotation)
-* [Gencode v25](Validation#validation-using-gencode-v25-genome-annotation)
+* [UCSC hg19](https://github.com/ncbi/TPMCalculator/wiki/Validation#validation-using-ucsc-hg19-genome-annotation)
+* [Gencode v25](https://github.com/ncbi/TPMCalculator/wiki/Validation#validation-using-gencode-v25-genome-annotation)
 
 For more detailed description and instalation guide lines see https://github.com/ncbi/TPMCalculator/wiki/
 
