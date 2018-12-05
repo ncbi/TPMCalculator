@@ -445,10 +445,10 @@ int ReadFactory::processBAMSAMFromDir(std::string dirName, bool onlyProperlyPair
     return totalCount;
 }
 
-void ReadFactory::printResults(bool singleFile, bool extendedOutput) {
+void ReadFactory::printResults(bool singleFile, bool extendedOutput, bool all_feat) {
     int count = 0;
     string sampleFileName;
-    SPtrChromosomeNGS c;
+    Chromosome<ReadData> *c;
     SPtrGeneNGS g;
     SPtrIsoformNGS i;
     SPtrFeatureNGS f;
@@ -496,11 +496,11 @@ void ReadFactory::printResults(bool singleFile, bool extendedOutput) {
             exit(-1);
         }
 
-        for (auto cIt = genomeFactory.getChromosomes().begin(); cIt != genomeFactory.getChromosomes().end(); ++cIt) {
-            c = cIt->second;
+        for (string chr : getGenomeFactory().getChrOrder()) {
+            c = getGenomeFactory().findChromosome(chr);
             for (auto it = c->getGenes().begin(); it != c->getGenes().end(); ++it) {
                 g = *it;
-                if (g->isProcessed()) {
+                if (all_feat || g->isProcessed()) {
                     out_gene << g->getId()
                             << "\t" << c->getId()
                             << "\t" << g->getStart()
