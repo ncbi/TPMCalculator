@@ -92,25 +92,8 @@ used for TPM calculation.
 
 ## Validation
 
-To validate our software, we calculate the Pearson correlation coefficient between TPM and FPKM 
-for normalized expression values using RNA-Seq data of 1,256 samples from 
-the TCGA-BRCA project.
-
-![Correlation Plot](https://github.com/ncbi/TPMCalculator/raw/master/doc/TPMCalculator_RSeQC.png)
-
-Additionally, the correlation coefficient was also calculated for the raw read counts 
-reported by TPMCalculator, HTSeq and featureCounts.
-
-<img src="https://github.com/ncbi/TPMCalculator/raw/master/doc/TPMCalculator_HTSEq.png" alt="Correlation Plot"  width="888" />
-<img src="https://github.com/ncbi/TPMCalculator/raw/master/doc/TPMCalculator_featureCounts.png" alt="Correlation Plot"  width="888" />
-
-### Table S3: Correlation coefficient between TPMCalculator and the three tools for the samples with low correlation at least for one tool. Color scale: green high correlation and white low correlation
-
-<img src="https://github.com/ncbi/TPMCalculator/raw/master/doc/TableS3.png" alt="Correlation Plot"  width="888" />
-
-TPMCalculator reduces the compute time and the resource requirements of RNA-Seq pipelines 
-by eliminating multiple steps. For example, TPMCalculator processes BAM files of size 7.0 GB 
-in ~20 minutes requiring only 4GB of RAM. 
+* [UCSC hg19](https://github.com/ncbi/TPMCalculator/wiki/Validation#validation-using-ucsc-hg19-genome-annotation)
+* [Gencode v25](https://github.com/ncbi/TPMCalculator/wiki/Validation#validation-using-gencode-v25-genome-annotation)
 
 For more detailed description and instalation guide lines see https://github.com/ncbi/TPMCalculator/wiki/
 
