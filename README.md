@@ -72,6 +72,7 @@ Usage: ./bin/TPMCalculator -g GTF_file [-d BAM_files_directory|-i BAM_file]
         -q    Minimum MAPQ value to filter out reads. Default: 0. This value depends on the aligner MAPQ value.
         -o    Minimum overlap between a reads and a feature. Default: 8.
         -e    Extended output. This will include transcript level TPM values. Default: No.
+        -a    Print out all features with read counts equal to zero. Default: No.
 
 ## Description
 

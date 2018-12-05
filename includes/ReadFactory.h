@@ -332,7 +332,7 @@ namespace ngs {
         int processBAMSAMFromDir(std::string dirName, bool onlyProperlyPaired, uint16_t minMAPQ, uint16_t minOverlap);
         int processReadsFromBAM(std::string bamFileName, std::string sampleName, bool onlyProperlyPaired, uint16_t minMAPQ, uint16_t minOverlap);
         std::vector<BamTools::CigarOp> processCigar(std::string cigar);
-        void printResults(bool singleFile, bool extendedOutput);
+        void printResults(bool singleFile, bool extendedOutput, bool all_feat);
         void printResultsMatrix(std::string output_name, std::vector<std::string> tpmColumns);
 
         void processReadAtGenomeLevel(std::string chrName, std::string sampleName, std::set < std::pair<unsigned int, unsigned int>, coordinateLessCMP> read_coords, uint16_t minOverlap);

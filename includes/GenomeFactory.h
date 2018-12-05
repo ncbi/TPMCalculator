@@ -9,6 +9,7 @@
 #define GENOMEFACTORY_H
 
 #include <unordered_map>
+#include <deque>
 #include <set>
 #include <vector>
 #include <string>
@@ -1191,6 +1192,10 @@ namespace genome {
 
             return currentIso;
         }
+        
+        std::deque<std::string> getChrOrder() const {
+            return chrOrder;
+        }
 
         GeneMultiSetItr<T> findGeneUpperBound(std::string chrName, unsigned int start, unsigned int end) {
             GeneMultiSetItr<T> it;
@@ -1242,6 +1247,7 @@ namespace genome {
                         try {
                             setCurrentChr(fParser.getWords()[0]);
                         } catch (exceptions::NotFoundException ex) {
+                            chrOrder.push_back(fParser.getWords()[0]);
                             std::pair < ChromosomeUnMapItr<T>, bool> res = chromosomes.insert(std::make_pair(fParser.getWords()[0], std::make_shared<Chromosome < T >> (fParser.getWords()[0])));
                             if (!res.second) {
                                 std::cerr << "Error inserting new Chromosome" << std::endl;
@@ -1268,6 +1274,7 @@ namespace genome {
             }
         }
     private:
+        std::deque<std::string> chrOrder;
         ChromosomeUnMap<T> chromosomes;
         GeneIsoformUnMap<T> transcript2Chr;
         SPtrIsoform<T> currentIso;

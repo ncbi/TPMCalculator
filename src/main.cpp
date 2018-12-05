@@ -43,6 +43,7 @@ void print_usage(char *program_name, int exit_code) {
     cerr << "-q    Minimum MAPQ value to filter out reads. Default: 0. This value depends on the aligner MAPQ value.\n";
     cerr << "-o    Minimum overlap between a reads and a feature. Default: 8.\n";
     cerr << "-e    Extended output. This will include transcript level TPM values. Default: No.\n";
+    cerr << "-a    Print out all features with read counts equal to zero. Default: No.\n";
     cerr << "\n********************************************************************************\n";
     cerr << "\n                        Roberto Vera Alvarez, PhD\n";
     cerr << "                      Emails: veraalva@ncbi.nlm.nih.gov\n\n";
@@ -64,6 +65,7 @@ int main(int argc, char *argv[]) {
     bool onlyProperlyPaired = false;
     bool singleFile = false;
     bool extendedOutput = false;
+    bool all_feat = false;
     set<string>features = {"exon"};
     unordered_map<string, string> featuresToCreate = {
         {"exon", "intron"}
@@ -184,6 +186,8 @@ int main(int argc, char *argv[]) {
                 onlyProperlyPaired = true;
             } else if (option.compare(1, 1, "e") == 0) {
                 extendedOutput = true;
+            } else if (option.compare(1, 1, "a") == 0) {
+                all_feat = true;
             } else {
                 cerr << "Unsupported option: " << option << endl;
                 print_usage(argv[0], -1);
@@ -241,7 +245,7 @@ int main(int argc, char *argv[]) {
 
     cerr << "Printing results" << endl;
     fflush(NULL);
-    readFactory.printResults(singleFile, extendedOutput);
+    readFactory.printResults(singleFile, extendedOutput, all_feat);
 
     cerr << "Total time: " << uTime.getTotalTimeSec() << " seconds" << endl;
     return 0;
