@@ -1,9 +1,13 @@
 # Base Image
-FROM biocontainers/biocontainers:latest
+# Base Image
+FROM ubuntu:18.04
 
 # Metadata
-LABEL base.image="biocontainers/biocontainers:latest"
-LABEL version="3"
+LABEL base.image="ubuntu:18.04"
+#FROM biocontainers/biocontainers:latest
+#
+## Metadata
+#LABEL base.image="biocontainers/biocontainers:latest"
 LABEL software="TPMCalculator"
 LABEL software.version="0.0.1"
 LABEL description="This program calculates the TPM (Transcript per Millions) values for the exons and introns from NGS RNA-Seq aligned reads (BAM files)"
@@ -29,9 +33,14 @@ USER root
 RUN apt-get clean all && \
     apt-get update && \
     apt-get -y upgrade && \
+    apt-get install -y apt-utils && \
+    apt-get install -y tzdata && \
+    apt-get install -y software-properties-common && \
+    apt-get install -y gcc g++ perl wget zip make && \
+    apt-get install -y unzip cmake git libjsoncpp-dev zlib1g-dev && \
     apt-get clean && \
     apt-get purge && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN cd $DST && \
         git clone $BAMTOOLS_URL && \
