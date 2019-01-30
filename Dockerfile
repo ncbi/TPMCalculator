@@ -1,13 +1,8 @@
 # Base Image
-# Base Image
 FROM ubuntu:18.04
 
 # Metadata
 LABEL base.image="ubuntu:18.04"
-#FROM biocontainers/biocontainers:latest
-#
-## Metadata
-#LABEL base.image="biocontainers/biocontainers:latest"
 LABEL software="TPMCalculator"
 LABEL software.version="0.0.1"
 LABEL description="This program calculates the TPM (Transcript per Millions) values for the exons and introns from NGS RNA-Seq aligned reads (BAM files)"
