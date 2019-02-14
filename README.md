@@ -56,7 +56,7 @@ Use it like this:
 
 ## Usage
 
-Usage: ./bin/TPMCalculator -g GTF_file [-d BAM_files_directory|-i BAM_file] 
+Usage: ./bin/TPMCalculator -g GTF_file [-d BAM_files_directory|-b BAM_file] 
 
     ./bin/TPMCalculator options:
 
