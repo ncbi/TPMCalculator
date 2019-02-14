@@ -9,7 +9,7 @@ and raw read counts for genes, transcripts, exons and introns respectively.
 
 ## Reference
 
- * Vera Alvarez, R., et al., [TPMCalculator: one-step software to quantify mRNA abundance of genomic features](https://doi.org/10.1093/bioinformatics/bty896). Bioinformatics, 2018.
+ * Roberto Vera Alvarez, Lorinc Sandor Pongor, Leonardo Mariño-Ramírez, David Landsman; TPMCalculator: one-step software to quantify mRNA abundance of genomic features, Bioinformatics, , bty896, https://doi.org/10.1093/bioinformatics/bty896
 
 ## Requirements
 
