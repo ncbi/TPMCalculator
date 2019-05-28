@@ -32,6 +32,7 @@ void print_usage(char *program_name, int exit_code) {
     cerr << "\nUsage: " << program_name;
     cerr << "\n\n" << program_name << " options:\n\n";
     cerr << "-v    Print info\n";
+    cerr << "-version    Print version\n";
     cerr << "-h    Display this usage information.\n";
     cerr << "-g    GTF file\n";
     cerr << "-d    Directory with the BAM files\n";
@@ -192,6 +193,9 @@ int main(int argc, char *argv[]) {
                 cerr << "Unsupported option: " << option << endl;
                 print_usage(argv[0], -1);
             }
+        } else if (option.size() == 8 and option.compare(1, 7, "version") == 0) {
+            cout << "Version: 0.0.3" << endl;
+            exit(0);
         } else {
             cerr << "Unsupported option: " << option << endl;
             print_usage(argv[0], -1);
