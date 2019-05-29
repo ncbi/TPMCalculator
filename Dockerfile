@@ -4,7 +4,7 @@ FROM ubuntu:18.04
 # Metadata
 LABEL base.image="ubuntu:18.04"
 LABEL software="TPMCalculator"
-LABEL software.version="0.0.1"
+LABEL software.version="0.0.3"
 LABEL description="This program calculates the TPM (Transcript per Millions) values for the exons and introns from NGS RNA-Seq aligned reads (BAM files)"
 LABEL website="https://github.com/ncbi/TPMCalculator"
 LABEL documentation="https://github.com/ncbi/TPMCalculator"
@@ -54,6 +54,12 @@ RUN cd $DST && \
 	make && \
 	mv $DST/$FOLDER/bin/* /usr/local/bin/ && \
         rm -rf $DST/$FOLDER
+
+RUN adduser --disabled-password --gecos '' ubuntu
+RUN chmod a+rwx /home/ubuntu/
+RUN mkdir /home/ubuntu/bin
+RUN chown -R ubuntu /home/ubuntu
+USER ubuntu
 
 WORKDIR /data/
 
