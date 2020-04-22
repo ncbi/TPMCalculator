@@ -10,6 +10,10 @@ and raw read counts for genes, transcripts, exons and introns respectively.
 ## Reference
 
  * Roberto Vera Alvarez, Lorinc Sandor Pongor, Leonardo Mariño-Ramírez, David Landsman; TPMCalculator: one-step software to quantify mRNA abundance of genomic features, Bioinformatics, , bty896, https://doi.org/10.1093/bioinformatics/bty896
+ 
+## Conda/Bioconda
+
+TPMCalculator is available on Bioconda: https://bioconda.github.io/recipes/tpmcalculator/README.html
 
 ## Requirements
 
