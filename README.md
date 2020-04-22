@@ -15,6 +15,10 @@ and raw read counts for genes, transcripts, exons and introns respectively.
 
 TPMCalculator is available on Bioconda: https://bioconda.github.io/recipes/tpmcalculator/README.html
 
+## NIH Biowulf
+
+NIH Biowulf users can load TPMcalculator as a module: https://hpc.nih.gov/apps/TPMCalculator.html    
+
 ## Requirements
 
 ### BAMTools
