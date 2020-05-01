@@ -479,7 +479,7 @@ void ReadFactory::printResults(bool singleFile, bool extendedOutput, bool all_fe
             cerr << "Can't open file " << sampleFileName << endl;
             exit(-1);
         }
-        out_gene << "Gene_Id\tChr\tStart\tEnd\tLength\tReads\tTPM\tExonLength\tExonReads\tExonTPM\tIntronLength\tIntronReads\tIntronTPM\tUniqueLegth\tUniqueReads\tUniqueTPM\tUniqueExonLength\tUniqueExonReads\tUniqueExonTPM\tUniqueIntronLength\tUniqueIntronReads\tUniqueIntronTPM" << endl;
+        out_gene << "Gene_Id\tChr\tStart\tEnd\tLength\tReads\tTPM\tExonLength\tExonReads\tExonTPM\tIntronLength\tIntronReads\tIntronTPM\tUniqueLength\tUniqueReads\tUniqueTPM\tUniqueExonLength\tUniqueExonReads\tUniqueExonTPM\tUniqueIntronLength\tUniqueIntronReads\tUniqueIntronTPM" << endl;
 
         sampleFileName = *sIt + "_genes.ent";
         ent_gene.open(sampleFileName);
