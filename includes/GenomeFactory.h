@@ -1018,9 +1018,12 @@ namespace genome {
             std::string isoformName;
             std::unordered_map<std::string, std::string> fieldsMap;
             GeneUnMapItr<T> it;
-            int wStart, wEnd;
+            int wStart = atoi(words[3].c_str());
+            int wEnd;
 
-            wStart = atoi(words[3].c_str()) - 1;
+            if (wStart != 0) {
+                wStart = wStart - 1;
+            }
             wEnd = atoi(words[4].c_str()) - 1;
             BString::split(words[8], ";", fields);
             geneName = "";
@@ -1192,7 +1195,7 @@ namespace genome {
 
             return currentIso;
         }
-        
+
         std::deque<std::string> getChrOrder() const {
             return chrOrder;
         }
@@ -1202,8 +1205,13 @@ namespace genome {
             setCurrentChr(chrName);
             SPtrGene<T> g = std::make_shared<Gene < T >> ("gene", start, end);
             it = currentChr->getGenes().lower_bound(g);
-            if (it == currentChr->getGenes().end()) --it;
-
+            if (it == currentChr->getGenes().end()) {
+                if (!currentChr->getGenes().empty()) {
+                    --it;
+                } else {
+                    throw exceptions::NotFoundException("Chromosome " + currentChr->getId() + " does not have genes");
+                }
+            }
             return it;
         }
 
@@ -1259,7 +1267,7 @@ namespace genome {
                             currentChr->processGTFLine(fParser.getWords(), geneIdKey, isoformIdKey);
                         } catch (exceptions::NotFoundException ex) {
                             std::cerr << ex.what() << std::endl;
-                            std::cerr << "Error processing GTF line at Chromosome level:\n" +  fParser.getLine() << std::endl;
+                            std::cerr << "Error processing GTF line at Chromosome level:\n" + fParser.getLine() << std::endl;
                             exit(-1);
                         }
                     }

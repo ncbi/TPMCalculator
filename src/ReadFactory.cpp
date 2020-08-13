@@ -47,12 +47,16 @@ void ReadFactory::processReadAtGenomeLevel(std::string chrName, std::string samp
     GeneMultiSetNGS::iterator geneIt;
     try {
         if (!read_coords.empty()) {
-            geneIt = genomeFactory.findGeneUpperBound(chrName, read_coords.rbegin()->first, read_coords.rbegin()->second);
-            for (auto it = geneIt;; --it) {
-                this->processReadAtGeneLevel(*it, sampleName, read_coords, minOverlap);
-                if (done) break;
-                if (std::distance(it, geneIt) > 6 && (*it)->getEnd() < (*read_coords.begin()).first) done = true;
-                if (it == genomeFactory.getCurrentChr()->getGenes().begin()) break;
+            try {
+                geneIt = genomeFactory.findGeneUpperBound(chrName, read_coords.rbegin()->first, read_coords.rbegin()->second);
+                for (auto it = geneIt;; --it) {
+                    this->processReadAtGeneLevel(*it, sampleName, read_coords, minOverlap);
+                    if (done) break;
+                    if (std::distance(it, geneIt) > 6 && (*it)->getEnd() < (*read_coords.begin()).first) done = true;
+                    if (it == genomeFactory.getCurrentChr()->getGenes().begin()) break;
+                }
+            } catch (exceptions::NotFoundException ex) {
+                std::cerr << ex.what() << std::endl;
             }
         }
     } catch (exceptions::NotFoundException) {
@@ -383,7 +387,7 @@ int ReadFactory::processReadsFromBAM(std::string bamFileName, std::string sample
         }
     }
     reader.Close();
-
+    
     calculateTPMperSample(sampleName);
     return count;
 }
