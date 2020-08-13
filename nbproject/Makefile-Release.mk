@@ -78,7 +78,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=
+LDLIBSOPTIONS=-L../../bamtools/lib
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -91,32 +91,32 @@ bin/TPMCalculator: ${OBJECTFILES}
 ${OBJECTDIR}/src/DiffExpIR.o: src/DiffExpIR.cpp
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Iincludes -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/DiffExpIR.o src/DiffExpIR.cpp
+	$(COMPILE.cc) -O2 -Iincludes -I../../bamtools/include/bamtools -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/DiffExpIR.o src/DiffExpIR.cpp
 
 ${OBJECTDIR}/src/FastaFactory.o: src/FastaFactory.cpp
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Iincludes -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/FastaFactory.o src/FastaFactory.cpp
+	$(COMPILE.cc) -O2 -Iincludes -I../../bamtools/include/bamtools -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/FastaFactory.o src/FastaFactory.cpp
 
 ${OBJECTDIR}/src/RandomFactory.o: src/RandomFactory.cpp
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Iincludes -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/RandomFactory.o src/RandomFactory.cpp
+	$(COMPILE.cc) -O2 -Iincludes -I../../bamtools/include/bamtools -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/RandomFactory.o src/RandomFactory.cpp
 
 ${OBJECTDIR}/src/ReadFactory.o: src/ReadFactory.cpp
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Iincludes -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/ReadFactory.o src/ReadFactory.cpp
+	$(COMPILE.cc) -O2 -Iincludes -I../../bamtools/include/bamtools -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/ReadFactory.o src/ReadFactory.cpp
 
 ${OBJECTDIR}/src/Stats.o: src/Stats.cpp
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Iincludes -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/Stats.o src/Stats.cpp
+	$(COMPILE.cc) -O2 -Iincludes -I../../bamtools/include/bamtools -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/Stats.o src/Stats.cpp
 
 ${OBJECTDIR}/src/TextParser.o: src/TextParser.cpp
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Iincludes -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/TextParser.o src/TextParser.cpp
+	$(COMPILE.cc) -O2 -Iincludes -I../../bamtools/include/bamtools -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/TextParser.o src/TextParser.cpp
 
 ${OBJECTDIR}/src/bd0.o: src/bd0.c
 	${MKDIR} -p ${OBJECTDIR}/src
@@ -131,7 +131,7 @@ ${OBJECTDIR}/src/bratio.o: src/bratio.c
 ${OBJECTDIR}/src/bstring.o: src/bstring.cpp
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Iincludes -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/bstring.o src/bstring.cpp
+	$(COMPILE.cc) -O2 -Iincludes -I../../bamtools/include/bamtools -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/bstring.o src/bstring.cpp
 
 ${OBJECTDIR}/src/chebyshev.o: src/chebyshev.c
 	${MKDIR} -p ${OBJECTDIR}/src
@@ -176,7 +176,7 @@ ${OBJECTDIR}/src/lgammacor.o: src/lgammacor.c
 ${OBJECTDIR}/src/main.o: src/main.cpp
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Iincludes -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/main.o src/main.cpp
+	$(COMPILE.cc) -O2 -Iincludes -I../../bamtools/include/bamtools -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/main.o src/main.cpp
 
 ${OBJECTDIR}/src/pbeta.o: src/pbeta.c
 	${MKDIR} -p ${OBJECTDIR}/src
