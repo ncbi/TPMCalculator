@@ -7,6 +7,8 @@ multiple input BAM file(s) containing either single-end or paired-end sequencing
 The TPMCalculator output is comprised of four files per sample reporting the TPM values 
 and raw read counts for genes, transcripts, exons and introns respectively.
 
+[![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](http://bioconda.github.io/recipes/tpmcalculator/README.html)
+
 ## Reference
 
  * Roberto Vera Alvarez, Lorinc Sandor Pongor, Leonardo Mariño-Ramírez, David Landsman; TPMCalculator: one-step software to quantify mRNA abundance of genomic features, Bioinformatics, , bty896, https://doi.org/10.1093/bioinformatics/bty896
