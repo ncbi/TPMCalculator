@@ -1,5 +1,7 @@
 TPMCalculator
-===
+=============
+
+[![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](http://bioconda.github.io/recipes/tpmcalculator/README.html) [![Anaconda-Server Badge](https://anaconda.org/bioconda/tpmcalculator/badges/downloads.svg)](https://anaconda.org/bioconda/tpmcalculator) [![Anaconda-Server Badge](https://anaconda.org/bioconda/tpmcalculator/badges/license.svg)](https://anaconda.org/bioconda/tpmcalculator)
 
 TPMCalculator quantifies mRNA abundance directly from the alignments by parsing BAM files. 
 The input parameters are the same GTF files used to generate the alignments, and one or 
