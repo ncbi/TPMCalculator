@@ -45,6 +45,7 @@ void print_usage(char *program_name, int exit_code) {
     cerr << "-o    Minimum overlap between a reads and a feature. Default: 8.\n";
     cerr << "-e    Extended output. This will include transcript level TPM values. Default: No.\n";
     cerr << "-a    Print out all features with read counts equal to zero. Default: No.\n";
+    cerr << "-O Output Directory Path\n";
     cerr << "\n********************************************************************************\n";
     cerr << "\n                        Roberto Vera Alvarez, PhD\n";
     cerr << "                      Emails: veraalva@ncbi.nlm.nih.gov\n\n";
@@ -56,6 +57,7 @@ int main(int argc, char *argv[]) {
     int count = 0;
     TimeUtils uTime;
     string gtfFileName;
+    string output_path;
     string bamDirName;
     string bamFileName;
     string geneNameKey = "gene_id";
@@ -84,6 +86,19 @@ int main(int argc, char *argv[]) {
                 print_usage(argv[0], 0);
             } else if (option.compare(1, 1, "v") == 0) {
                 Global::instance()->setVerbose(1);
+            } else if(option.compare(1 , 1 , "O") == 0){
+                i++;
+                if(i < argc){
+                    output_path = argv[i];
+                    if(output_path.compare(0,1,"-")==0){
+                        cerr<<"Option output directory Path require an argument"<<endl;
+                        print_usage(argv[0],-1);
+                    }
+                }
+                else{
+                    cerr << "Option O require an argument" << endl;
+                    print_usage(argv[0], -1);
+                }
             } else if (option.compare(1, 1, "g") == 0) {
                 i++;
                 if (i < argc) {
@@ -207,6 +222,11 @@ int main(int argc, char *argv[]) {
         print_usage(argv[0], -1);
     }
 
+    if (output_path.empty()) {
+        cerr << "\nOutput directory path is required. See -O option" << endl;
+        print_usage(argv[0], -1);
+    }
+
     if (bamDirName.empty() && bamFileName.empty()) {
         cerr << "\nDirectory with the BAM files or a BAM file is required. See -d or -b options" << endl;
         print_usage(argv[0], -1);
@@ -249,7 +269,7 @@ int main(int argc, char *argv[]) {
 
     cerr << "Printing results" << endl;
     fflush(NULL);
-    readFactory.printResults(singleFile, extendedOutput, all_feat);
+    readFactory.printResults(singleFile, extendedOutput, all_feat, output_path);
 
     cerr << "Total time: " << uTime.getTotalTimeSec() << " seconds" << endl;
     return 0;

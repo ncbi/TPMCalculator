@@ -449,7 +449,7 @@ int ReadFactory::processBAMSAMFromDir(std::string dirName, bool onlyProperlyPair
     return totalCount;
 }
 
-void ReadFactory::printResults(bool singleFile, bool extendedOutput, bool all_feat) {
+void ReadFactory::printResults(bool singleFile, bool extendedOutput, bool all_feat, string output_path) {
     int count = 0;
     string sampleFileName;
     Chromosome<ReadData> *c;
@@ -458,9 +458,18 @@ void ReadFactory::printResults(bool singleFile, bool extendedOutput, bool all_fe
     SPtrFeatureNGS f;
     ofstream out_trans, ent_trans, out_gene, ent_gene, ent_gene_unique;
 
+    int output_path_length = output_path.size();
+    if(output_path[output_path_length-1]!='/'){
+        output_path+="/";
+    }
+
     for (auto sIt = samples.begin(); sIt != samples.end(); ++sIt) {
         if (extendedOutput) {
-            sampleFileName = *sIt + "_transcripts.out";
+            
+            cout<<"Output path for _transcripts.out: ";
+            sampleFileName = output_path + *sIt + "_transcripts.out";
+            cout<<sampleFileName;
+            
             out_trans.open(sampleFileName);
             if (!out_trans.is_open()) {
                 cerr << "Can't open file " << sampleFileName << endl;
@@ -468,7 +477,11 @@ void ReadFactory::printResults(bool singleFile, bool extendedOutput, bool all_fe
             }
             out_trans << "Gene_Id\tTranscript_Id\tChr\tStart\tEnd\tLength\tReads\tTPM\tExonLength\tExonReads\tExonTPM\tIntronLength\tIntronReads\tIntronTPM" << endl;
 
-            sampleFileName = *sIt + "_transcripts.ent";
+
+            cout<<"Output path for _transcripts.ent: ";
+            sampleFileName = output_path + *sIt + "_transcripts.ent";
+            cout<<sampleFileName<<endl;
+
             ent_trans.open(sampleFileName);
             ent_trans << "Gene_Id\tTranscript_Id\tChr\tType\tType_Number\tstart\tend\tLength\tReads\tTPM" << endl;
             if (!ent_trans.is_open()) {
@@ -476,23 +489,33 @@ void ReadFactory::printResults(bool singleFile, bool extendedOutput, bool all_fe
                 exit(-1);
             }
         }
+        
+        cout<<"Output Path _gene.out: ";
+        sampleFileName = output_path + *sIt + "_genes.out";
+        cout<<sampleFileName<<endl;
 
-        sampleFileName = *sIt + "_genes.out";
         out_gene.open(sampleFileName);
         if (!out_gene.is_open()) {
             cerr << "Can't open file " << sampleFileName << endl;
             exit(-1);
         }
         out_gene << "Gene_Id\tChr\tStart\tEnd\tLength\tReads\tTPM\tExonLength\tExonReads\tExonTPM\tIntronLength\tIntronReads\tIntronTPM\tUniqueLength\tUniqueReads\tUniqueTPM\tUniqueExonLength\tUniqueExonReads\tUniqueExonTPM\tUniqueIntronLength\tUniqueIntronReads\tUniqueIntronTPM" << endl;
-
-        sampleFileName = *sIt + "_genes.ent";
+        
+        cout<<"Output path for _genes.ent: ";
+        sampleFileName = output_path + *sIt + "_genes.ent";
+        cout<<sampleFileName<<endl;
+        
         ent_gene.open(sampleFileName);
         ent_gene << "Gene_Id\tChr\tType\tType_Number\tstart\tend\tLength\tReads\tTPM" << endl;
         if (!ent_gene.is_open()) {
             cerr << "Can't open file " << sampleFileName << endl;
             exit(-1);
         }
-        sampleFileName = *sIt + "_genes.uni";
+        
+        cout<<"Output path for _genes.uni: ";
+        sampleFileName = output_path + *sIt + "_genes.uni";
+        cout<<sampleFileName<<endl;
+        
         ent_gene_unique.open(sampleFileName);
         ent_gene_unique << "Gene_Id\tChr\tType\tType_Number\tstart\tend\tLength\tReads\tTPM" << endl;
         if (!ent_gene_unique.is_open()) {

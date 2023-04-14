@@ -1,8 +1,8 @@
 # Base Image
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 # Metadata
-LABEL base.image="ubuntu:18.04"
+LABEL base.image="ubuntu:20.04"
 LABEL software="TPMCalculator"
 LABEL software.version="0.0.3"
 LABEL description="This program calculates the TPM (Transcript per Millions) values for the exons and introns from NGS RNA-Seq aligned reads (BAM files)"
