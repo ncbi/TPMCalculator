@@ -45,7 +45,7 @@ void print_usage(char *program_name, int exit_code) {
     cerr << "-o    Minimum overlap between a reads and a feature. Default: 8.\n";
     cerr << "-e    Extended output. This will include transcript level TPM values. Default: No.\n";
     cerr << "-a    Print out all features with read counts equal to zero. Default: No.\n";
-    cerr << "-O Output Directory Path\n";
+    cerr << "-O    Output Directory Path\n";
     cerr << "\n********************************************************************************\n";
     cerr << "\n                        Roberto Vera Alvarez, PhD\n";
     cerr << "                      Emails: veraalva@ncbi.nlm.nih.gov\n\n";
