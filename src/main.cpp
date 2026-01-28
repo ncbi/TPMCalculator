@@ -194,7 +194,7 @@ int main(int argc, char *argv[]) {
                 print_usage(argv[0], -1);
             }
         } else if (option.size() == 8 and option.compare(1, 7, "version") == 0) {
-            cout << "Version: 0.0.4.1" << endl;
+            cout << "Version: 0.0.6" << endl;
             exit(0);
         } else {
             cerr << "Unsupported option: " << option << endl;
