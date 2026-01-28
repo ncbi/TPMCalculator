@@ -19,10 +19,7 @@ echo $CPPFLAGS
 echo $LDFLAGS
 cd ..
 echo "Compiling TPMCalculator"
-pwd
-ls
-echo
-echo
 make
 
+bin/TPMCalculator
 
