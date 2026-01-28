@@ -17,7 +17,7 @@ echo "Using FLAGS:"
 echo $BAMTOOLS_DIR
 echo $CPPFLAGS
 echo $LDFLAGS
-
+cd ..
 echo "Compiling TPMCalculator"
 pwd
 ls
